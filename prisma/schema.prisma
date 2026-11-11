@@ -1,0 +1,25 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Order {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  razorpay_order_id   String   @unique
+  razorpay_payment_id String?  @unique
+  customer_details    Json
+  device_details      Json
+  package_id          String
+  amount              Float
+  payment_status      String   @default("CREATED")
+  notification_status String   @default("PENDING")
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  @@map("orders")
+}
+

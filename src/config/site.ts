@@ -1,0 +1,27 @@
+export const siteConfig = {
+  name: "XPWOT",
+  tagline: "Precision Meets Performance",
+  description: "Premium Free Fire and Free Fire MAX sensitivity customization store. Stop guessing your sensitivity. Get customized settings tailored to your smartphone model, RAM, refresh rate, and finger play style.",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://xpwot.com",
+  ogImage: "https://xpwot.com/og-image.png",
+  disclaimer: "XPWOT is an independent third-party service and is not affiliated with, endorsed by, or sponsored by Garena or Free Fire.",
+  contact: {
+    whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919341923708",
+    whatsappDisplay: "+91 93419 23708",
+    telegramUsername: process.env.NEXT_PUBLIC_TELEGRAM_USERNAME || "xpwot",
+    telegramLink: "https://t.me/xpwot",
+    email: "support@xpwot.com",
+    hours: "10:00 AM – 11:00 PM IST (Mon – Sun)",
+    responseTime: "Within 30 – 60 minutes",
+  },
+  links: {
+    home: "/",
+    packs: "/#packs",
+    howItWorks: "/#how-it-works",
+    faq: "/#faq",
+    contact: "/contact",
+    order: "/order",
+    terms: "/terms",
+    refundPolicy: "/refund-policy",
+  },
+};

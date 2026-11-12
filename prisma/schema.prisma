@@ -10,8 +10,8 @@ generator client {
 model Order {
   id                  String   @id @default(auto()) @map("_id") @db.ObjectId
   zap_order_id        String   @unique
-  zap_gateway_order_id String?  @unique
-  zap_txn_id          String?  @unique
+  zap_gateway_order_id String?
+  zap_txn_id          String?
   zap_utr             String?
   customer_details    Json
   device_details      Json
@@ -22,5 +22,7 @@ model Order {
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
 
+  @@index([zap_gateway_order_id])
+  @@index([zap_txn_id])
   @@map("orders")
 }

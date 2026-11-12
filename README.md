@@ -1,7 +1,7 @@
 # XPWOT — Premium Free Fire Sensitivity Store
 
 > **Precision Meets Performance**  
-> An esports gaming e-commerce platform built with Next.js App Router, TypeScript, Tailwind CSS, Prisma ORM, MongoDB, and Razorpay Checkout, engineered to sell custom Free Fire and Free Fire MAX sensitivity settings to players across India.
+> An esports gaming e-commerce platform built with Next.js App Router, TypeScript, Tailwind CSS, Prisma ORM, MongoDB, and ZapUPI, engineered to sell custom Free Fire and Free Fire MAX sensitivity settings to players across India.
 
 ---
 
@@ -11,13 +11,14 @@
 - **Hardware-Specific Sensitivity Profiling**: Customers select exact phone model, RAM size (2GB to 12GB+), screen refresh rate (60Hz–144Hz), device DPI, target speed, primary play style (Rusher, Sniper, Balanced), and claw finger layout (2, 3, 4, 5+ fingers).
 - **Production Payment Security**:
   - Authoritative server-side pricing from `src/config/packages.ts` (client values are never trusted).
-  - Razorpay Checkout integration with UPI (GPay, PhonePe, Paytm, BHIM), Cards, and Net Banking.
-  - Cryptographic HMAC SHA256 timing-safe signature verification on both client checkout callbacks and asynchronous webhooks.
-  - Separation of keys: checkout uses `RAZORPAY_KEY_SECRET`; webhooks strictly use `RAZORPAY_WEBHOOK_SECRET`.
+  - ZapUPI order creation with server-validated INR pricing and same-tab payment redirects.
+  - Every order supplies the deployed webhook URL to ZapUPI. The webhook triggers a server-side order-status check; only a verified success with a matching amount and transaction ID can mark an order paid.
+  - Payment return also checks status server-side, so customer redirects do not act as proof of payment.
+  - Production rejects ZapUPI test-environment payments and `DUMMY` transaction IDs.
 - **Database & Idempotency (Prisma + MongoDB)**:
   - Database schema defined in `prisma/schema.prisma`.
-  - Atomic status updates (`notification_status: { not: "SENT" }`) guaranteeing **exactly-once** Telegram order alert delivery, even under concurrent webhook and checkout verification races.
-  - Development fallback: Built-in persistent file cache when `DATABASE_URL` is not yet configured locally.
+  - Atomic status updates (`notification_status: { not: "SENT" }`) preventing duplicate Telegram alerts across webhook and status checks.
+  - Development fallback: Built-in persistent file cache when MongoDB is not configured or temporarily unreachable locally. Production requires a working MongoDB connection.
 - **Telegram Bot Notifications**: Automated, sanitized, instant order alert dispatched to your private Telegram channel/chat formatted with customer game UID, phone hardware, claw style, and IST timestamp.
 - **Anti-Fraud Success Protection**: `/success` page actively verifies payment status with the server before rendering the confirmed receipt; direct URL visits cannot bypass payment checks.
 - **Compliance & Legal Readiness**: Includes dedicated Terms & Conditions, Consumer Protection compliant Refund Policy, Contact desk, and third-party disclaimers (not affiliated with Garena/Free Fire).
@@ -44,14 +45,13 @@ c:\Users\ddon8\coding\XpWot FF/
 ├── public/                     # Static assets and icons
 │
 ├── scripts/
-│   └── test-suite.js           # Automated validation & cryptographic test suite
+│   └── test-suite.js           # Automated checkout and webhook validation
 │
 └── src/
     ├── app/
     │   ├── api/
-    │   │   ├── create-order/route.ts      # Creates Razorpay order & stores record
-    │   │   ├── razorpay-webhook/route.ts  # Handles payment.captured webhook
-    │   │   ├── verify-payment/route.ts    # Timing-safe HMAC verification
+    │   │   ├── create-order/route.ts      # Creates ZapUPI order & stores record
+    │   │   ├── zapupi-webhook/route.ts    # Confirms ZapUPI webhook events
     │   │   └── verify-status/route.ts     # Server verification for /success page
     │   ├── contact/page.tsx               # Direct WhatsApp & Telegram contact
     │   ├── globals.css                    # Esports patterns, scrollbars & glow
@@ -80,7 +80,7 @@ c:\Users\ddon8\coding\XpWot FF/
     │   │   └── Navbar.tsx                # Sticky translucent Esports header
     │   ├── order/
     │   │   ├── DeviceDetails.tsx         # RAM, chipset, refresh rate, DPI
-    │   │   ├── OrderForm.tsx             # RHF + Zod + Razorpay orchestration
+    │   │   ├── OrderForm.tsx             # RHF + Zod + ZapUPI checkout
     │   │   ├── PackageSelector.tsx       # Package switcher with server prices
     │   │   ├── PlayerDetails.tsx         # Name, Game UID, WhatsApp, Telegram
     │   │   └── PlayStyle.tsx             # Rusher/Sniper/Balanced & Finger layout
@@ -101,7 +101,8 @@ c:\Users\ddon8\coding\XpWot FF/
     │   ├── mongodb.ts                    # Native MongoDB driver connection
     │   ├── prisma.ts                     # Prisma client singleton
     │   ├── rate-limit.ts                 # Sliding-window IP rate limiter
-    │   ├── razorpay.ts                   # Razorpay SDK & crypto verification
+    │   ├── zapupi.ts                     # ZapUPI create-order and status API
+    │   ├── zapupi-payment.ts             # Server-side payment confirmation
     │   ├── sanitize.ts                   # Input sanitation & Telegram formatting
     │   ├── telegram.ts                   # Bot notification dispatch
     │   ├── utils.ts                      # Helpers & formatters
@@ -118,13 +119,8 @@ c:\Users\ddon8\coding\XpWot FF/
 Copy `.env.example` to `.env.local` and customize your values:
 
 ```env
-# Razorpay Credentials (Test Mode provided)
-RAZORPAY_KEY_ID=rzp_test_TyYH4r13XB4ewE
-RAZORPAY_KEY_SECRET=ne7WGDCgVi9IQXvopRHj2Sih
-NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_TyYH4r13XB4ewE
-
-# Razorpay Webhook Secret (Set inside Razorpay Dashboard > Webhooks)
-RAZORPAY_WEBHOOK_SECRET=xpwot_webhook_secret_2026_secure
+# ZapUPI API key
+ZAPUPI_KEY=your_zapupi_api_key
 
 # Telegram Notification Settings
 TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
@@ -164,24 +160,43 @@ MONGODB_DB=xpwot
 
 ---
 
-## 💳 Razorpay Test Mode Verification
+## 💳 ZapUPI Checkout
 
-The test credentials provided are ready to test checkout:
-- **Key ID**: `rzp_test_TyYH4r13XB4ewE`
-- **Key Secret**: `ne7WGDCgVi9IQXvopRHj2Sih`
+Set `ZAPUPI_KEY` in `.env.local` and `NEXT_PUBLIC_SITE_URL` to the canonical HTTPS
+URL of your deployed site (no trailing slash). Each create-order request includes
+`https://<your-domain>/api/zapupi-webhook` as its per-order `webhook_url`, alongside
+the payment return URLs.
 
-### How to complete a test purchase:
-1. Navigate to `/order?pack=pro`.
-2. Enter your player details (e.g., Name: `Test Player`, UID: `1928374650`, WhatsApp: `9341923708`).
-3. Select your smartphone, RAM, refresh rate, and play style.
-4. Check the agreement checkbox and click **PAY SECURELY**.
-5. When the Razorpay modal appears:
-   - Select **UPI** or **Card**.
-   - For Card, enter any standard Razorpay test card (e.g. `4111 1111 1111 1111`, expiry `12/28`, CVV `123`).
-   - Click **Success** on the Razorpay simulation screen.
-6. The client callback posts to `/api/verify-payment`, verifies HMAC signatures, locks the transaction idempotently, and redirects to `/success` with verified details.
+The checkout creates a unique order on the server and sends the customer to the
+ZapUPI payment URL in the same tab. Both the webhook and the success page use
+ZapUPI's order-status API; a payment is accepted only after the server verifies its
+status, amount, and transaction ID. Both the merchant order ID and the `order_id`
+returned by ZapUPI are stored; status checks use the returned ID, while the
+webhook and success page can find the order by either ID.
 
-> **Important**: Live payments require Razorpay KYC activation and generating live API keys (`rzp_live_...`). Never use test keys in production.
+### Configure the ZapUPI webhook
+
+The app sends a per-order webhook override automatically. In the ZapUPI dashboard,
+also configure the same URL under the account's **Webhook**, **Callback URL**, or
+API settings if that option is available:
+
+```text
+https://your-domain.com/api/zapupi-webhook
+```
+
+Replace `your-domain.com` with the exact production hostname set in
+`NEXT_PUBLIC_SITE_URL`. Use HTTPS and make sure the route is publicly reachable.
+ZapUPI sends a JSON `POST` when an order's status changes. The receiver accepts the
+documented fields (`order_id`, `status`, `txn_id`, `amount`, `pay_amount`, `utr`,
+`customer_mobile`, `remark`, `remark_array`, `create_at`, and `environment`) and
+responds with HTTP 200 and `{"status":"ok"}`. The webhook is only a signal to
+recheck the order: the server calls ZapUPI's order-status API before updating the
+payment record or sending a paid-order Telegram alert. Invalid, unknown, and test
+webhooks are acknowledged without marking an order paid.
+
+For production, use live ZapUPI credentials and a production `NEXT_PUBLIC_SITE_URL`.
+Test-environment events and transaction IDs starting with `DUMMY` are not accepted
+as paid in production.
 
 ---
 
@@ -193,16 +208,17 @@ The test credentials provided are ready to test checkout:
 4. Create a private Telegram channel or group for order alerts (e.g. `XPWOT Orders`).
 5. Add your bot as an **Administrator** in the group/channel with &quot;Post Messages&quot; permission.
 6. To get the `TELEGRAM_CHAT_ID`:
-   - Send a message in the channel/group.
-   - Forward it to `@userinfobot` or call `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates` in your browser.
+   - For a private bot chat, open the bot and press **Start**, then call `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`.
+   - For a group/channel, send a message after adding the bot, then call the same `getUpdates` URL. For a channel, the bot must have permission to post.
    - Copy the `chat.id` (channels usually start with `-100...`) into `TELEGRAM_CHAT_ID`.
+7. Add both values to your hosting provider's environment settings and redeploy. A paid order sends the detailed order alert only after server-side payment verification. If Telegram is unavailable, the payment stays paid and a later verification attempt can retry the notification.
 
 ### Sample Notification Dispatched:
 ```text
 🔥 NEW PAID ORDER RECEIVED 🔥
 
-Order ID: order_P8x123abc
-Payment ID: pay_P8y456def
+Order ID: xpwot_4c8f...
+Payment ID: ZAPUPI66f10bd3c1f28
 Amount: ₹599
 Pack: PRO PACK
 
@@ -241,15 +257,6 @@ Finger Layout: 4 Fingers
 
 ---
 
-## 🌐 Razorpay Webhook Configuration
-
-1. Log in to [Razorpay Dashboard](https://dashboard.razorpay.com).
-2. Go to **Settings** > **Webhooks** > **Add New Webhook**.
-3. Set **Webhook URL**: `https://your-domain.com/api/razorpay-webhook`.
-4. Set **Secret**: Matches `RAZORPAY_WEBHOOK_SECRET` in `.env.local`.
-5. Select Event: `payment.captured`.
-6. Save the webhook.
-
 ---
 
 ## 🚢 Vercel Deployment Instructions
@@ -257,17 +264,15 @@ Finger Layout: 4 Fingers
 1. Push your repository to GitHub.
 2. In [Vercel Dashboard](https://vercel.com), click **Add New Project** and import your repository.
 3. In **Environment Variables**, add:
-   - `RAZORPAY_KEY_ID`
-   - `RAZORPAY_KEY_SECRET`
-   - `NEXT_PUBLIC_RAZORPAY_KEY_ID`
-   - `RAZORPAY_WEBHOOK_SECRET`
+   - `ZAPUPI_KEY`
    - `TELEGRAM_BOT_TOKEN`
    - `TELEGRAM_CHAT_ID`
    - `NEXT_PUBLIC_WHATSAPP_NUMBER` (`919341923708`)
    - `NEXT_PUBLIC_TELEGRAM_USERNAME` (`xpwot`)
    - `NEXT_PUBLIC_SITE_URL` (`https://your-domain.com`)
    - `DATABASE_URL` (MongoDB Atlas URI)
-4. Click **Deploy**. Vercel will build Next.js and deploy your store globally with edge caching.
+4. Click **Deploy**. After deployment, set the webhook URL in the ZapUPI dashboard to `https://your-domain.com/api/zapupi-webhook` if the dashboard provides a webhook setting. The app also sends this URL as the per-order override.
+5. Confirm the deployed URL is the same hostname as `NEXT_PUBLIC_SITE_URL`, and test a payment using ZapUPI's live environment before accepting customer orders. Do not use test/DUMMY transactions as proof of payment.
 
 ---
 
@@ -283,12 +288,10 @@ node scripts/test-suite.js
 - [x] Client form validates Indian WhatsApp numbers (strictly 10 digits starting with 6, 7, 8, or 9).
 - [x] Unchecked terms checkbox prevents payment submission.
 - [x] Prices on checkout match server configuration and cannot be modified by client requests.
-- [x] HMAC SHA256 timing-safe signature verification rejects tampered payments.
-- [x] Webhook verification rejects signatures created with the key secret instead of the webhook secret.
-- [x] Concurrent calls to webhook and checkout callback do not create duplicate Telegram notifications.
+- [x] ZapUPI payment status and amount are confirmed server-side before orders are marked paid.
+- [x] Concurrent webhook and status checks do not create duplicate Telegram notifications.
 - [x] `/success` page rejects unverified or non-paid orders.
 
 ---
 
 © 2026 XPWOT. All rights reserved. Precision Meets Performance.
-

@@ -51,7 +51,7 @@ export default function RefundPolicyPage() {
                 B. Money Deducted But Order Failed / Not Registered
               </h3>
               <p className="text-xs text-foreground-muted mt-1 leading-relaxed">
-                If your payment was debited from your bank but Razorpay or our servers failed to confirm the order due to a network drop, the gateway will either auto-reconcile within 24–48 hours, or our team will manually trigger a 100% refund upon receiving your transaction UTR / Payment ID.
+                If your payment was debited from your bank but ZapUPI or our servers failed to confirm the order due to a network drop, the gateway may auto-reconcile within 24–48 hours. If it does not, contact our team with your transaction UTR so we can investigate.
               </p>
             </div>
 
@@ -101,12 +101,10 @@ export default function RefundPolicyPage() {
             4. Refund Processing Timelines
           </h2>
           <p>
-            Approved refunds are initiated within <strong>24 business hours</strong> via the Razorpay payment gateway back to the original payment source:
+            Approved refunds are initiated within <strong>24 business hours</strong> through the payment gateway back to the original payment source:
           </p>
           <div className="p-4 rounded-xl bg-background-secondary border border-border text-xs font-mono space-y-1.5">
-            <div>• UPI Payments (GPay, PhonePe, Paytm): Typically credited in 2–4 hours (max 2 business days).</div>
-            <div>• Debit / Credit Cards: 5–7 banking days depending on your card issuer.</div>
-            <div>• Net Banking: 3–5 banking days.</div>
+            <div>• UPI payments: Crediting time depends on the bank or UPI provider.</div>
           </div>
         </section>
 
@@ -120,7 +118,7 @@ export default function RefundPolicyPage() {
           </p>
           <ol className="list-decimal pl-6 space-y-1 text-sm">
             <li>Your Order ID (e.g. <code className="text-accent font-mono">order_...</code>)</li>
-            <li>Razorpay Payment ID or Bank UTR Reference Number</li>
+            <li>ZapUPI transaction ID or Bank UTR Reference Number</li>
             <li>Registered WhatsApp number</li>
           </ol>
           <div className="pt-4 flex flex-wrap gap-4">
@@ -146,4 +144,3 @@ export default function RefundPolicyPage() {
     </div>
   );
 }
-

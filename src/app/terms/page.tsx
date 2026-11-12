@@ -68,7 +68,7 @@ export default function TermsPage() {
             4. Payment Terms
           </h2>
           <p>
-            All prices are denominated in Indian Rupees (INR) and are listed transparently on the website. Payments are securely processed through Razorpay using authorized Indian banking instruments, including Unified Payments Interface (UPI - Google Pay, PhonePe, Paytm, BHIM), debit cards, credit cards, and net banking. Prices are server-validated and cannot be modified on the client side.
+            All prices are denominated in Indian Rupees (INR) and are listed transparently on the website. Payments are securely processed through ZapUPI. Available payment methods are shown during checkout. Prices are server-validated and cannot be modified on the client side.
           </p>
         </section>
 
@@ -130,4 +130,3 @@ export default function TermsPage() {
     </div>
   );
 }
-

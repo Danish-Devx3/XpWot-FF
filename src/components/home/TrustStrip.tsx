@@ -10,7 +10,7 @@ export function TrustStrip() {
     },
     {
       title: "SECURE PAYMENT",
-      description: "100% encrypted checkout powered by Razorpay with UPI & card options",
+      description: "Secure checkout powered by ZapUPI",
       icon: ShieldCheck,
     },
     {
@@ -50,4 +50,3 @@ export function TrustStrip() {
     </section>
   );
 }
-

@@ -91,8 +91,16 @@ export const orderFormSchema = z.object({
 
 export type OrderFormSchemaType = z.infer<typeof orderFormSchema>;
 
-export const verifyPaymentSchema = z.object({
-  razorpay_order_id: z.string().min(1, "Razorpay Order ID is required"),
-  razorpay_payment_id: z.string().min(1, "Razorpay Payment ID is required"),
-  razorpay_signature: z.string().min(1, "Razorpay Signature is required"),
+export const zapupiWebhookSchema = z.object({
+  order_id: z.string().min(1),
+  status: z.string().min(1),
+  txn_id: z.string().optional(),
+  amount: z.union([z.string(), z.number()]).optional(),
+  pay_amount: z.union([z.string(), z.number()]).optional(),
+  utr: z.string().optional(),
+  customer_mobile: z.string().optional(),
+  remark: z.string().optional(),
+  remark_array: z.array(z.string()).optional(),
+  create_at: z.string().optional(),
+  environment: z.string().optional(),
 });

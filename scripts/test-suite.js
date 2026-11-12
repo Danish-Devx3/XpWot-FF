@@ -1,10 +1,8 @@
 /**
  * XPWOT Comprehensive Automated Verification Suite
- * Tests input validation, Razorpay HMAC signatures, webhook verification,
- * pricing server authority, and idempotency guarantees.
+ * Tests input validation, ZapUPI webhook payloads, and idempotency behavior.
  */
 
-const crypto = require("crypto");
 const { z } = require("zod");
 
 // 1. Re-run Validation Schema Tests
@@ -88,62 +86,47 @@ assert(!orderFormSchema.safeParse(invalidPhone2).success, "WhatsApp with 9 digit
 const unacceptedTerms = { ...validPayload, termsAccepted: false };
 assert(!orderFormSchema.safeParse(unacceptedTerms).success, "Unaccepted terms fails validation");
 
-console.log("\n=== 2. RAZORPAY HMAC SIGNATURE VERIFICATION TESTS ===");
-const TEST_KEY_SECRET = "ne7WGDCgVi9IQXvopRHj2Sih";
-const orderId = "order_Oq7K9xX12345";
-const paymentId = "pay_Oq7L3yY67890";
-
-const validPayloadString = `${orderId}|${paymentId}`;
-const validSignature = crypto
-  .createHmac("sha256", TEST_KEY_SECRET)
-  .update(validPayloadString)
-  .digest("hex");
-
-function verifySignature(oId, pId, sig, secret) {
-  const payload = `${oId}|${pId}`;
-  const expected = crypto.createHmac("sha256", secret).update(payload).digest("hex");
-  const expBuf = Buffer.from(expected, "utf8");
-  const recBuf = Buffer.from(sig, "utf8");
-  if (expBuf.length !== recBuf.length) return false;
-  return crypto.timingSafeEqual(expBuf, recBuf);
-}
-
-assert(verifySignature(orderId, paymentId, validSignature, TEST_KEY_SECRET), "Valid signature verified successfully");
-assert(!verifySignature(orderId, paymentId, "invalid_sig_12345", TEST_KEY_SECRET), "Tampered signature rejected");
-assert(!verifySignature(orderId, "pay_TAMPERED", validSignature, TEST_KEY_SECRET), "Tampered payment ID rejected");
-
-console.log("\n=== 3. WEBHOOK SIGNATURE VERIFICATION TESTS ===");
-const WEBHOOK_SECRET = "xpwot_webhook_secret_2026_secure";
-const webhookBody = JSON.stringify({
-  event: "payment.captured",
-  payload: {
-    payment: {
-      entity: { id: paymentId, order_id: orderId, amount: 59900 },
-    },
-  },
+console.log("\n=== 2. ZAPUPI WEBHOOK PAYLOAD TESTS ===");
+const zapupiWebhookSchema = z.object({
+  order_id: z.string().min(1),
+  status: z.string().min(1),
+  txn_id: z.string().optional(),
+  amount: z.union([z.string(), z.number()]).optional(),
+  pay_amount: z.union([z.string(), z.number()]).optional(),
+  utr: z.string().optional(),
+  customer_mobile: z.string().optional(),
+  remark: z.string().optional(),
+  remark_array: z.array(z.string()).optional(),
+  create_at: z.string().optional(),
+  environment: z.string().optional(),
 });
 
-const validWebhookSig = crypto
-  .createHmac("sha256", WEBHOOK_SECRET)
-  .update(webhookBody)
-  .digest("hex");
+const webhookPayload = {
+  order_id: "xpwot_123",
+  status: "Success",
+  txn_id: "ZAPUPI123",
+  amount: "599.00",
+  pay_amount: "599.00",
+  utr: "123456789",
+  environment: "test",
+  customer_mobile: "9341923708",
+  remark: "Pro | 1234567890",
+  remark_array: ["Pro", "1234567890"],
+  create_at: "2026-11-12 08:33:55",
+};
+assert(zapupiWebhookSchema.safeParse(webhookPayload).success, "Valid ZapUPI webhook payload passes");
+assert(
+  zapupiWebhookSchema.safeParse({ ...webhookPayload, amount: 599, pay_amount: 599 }).success,
+  "Numeric amount values pass webhook validation"
+);
+assert(!zapupiWebhookSchema.safeParse({ ...webhookPayload, order_id: "" }).success, "Webhook without an order ID fails");
 
-function verifyWebhook(body, sig, secret) {
-  const expected = crypto.createHmac("sha256", secret).update(body).digest("hex");
-  const expBuf = Buffer.from(expected, "utf8");
-  const recBuf = Buffer.from(sig, "utf8");
-  if (expBuf.length !== recBuf.length) return false;
-  return crypto.timingSafeEqual(expBuf, recBuf);
-}
-
-assert(verifyWebhook(webhookBody, validWebhookSig, WEBHOOK_SECRET), "Valid webhook signature verified");
-assert(!verifyWebhook(webhookBody, validWebhookSig, TEST_KEY_SECRET), "Webhook fails if key_secret used instead of webhook_secret");
-
-console.log("\n=== 4. IDEMPOTENCY & CONCURRENCY TESTS ===");
+console.log("\n=== 3. IDEMPOTENCY & CONCURRENCY TESTS ===");
 const processed = new Set();
-function claimLock(paymentId) {
-  if (processed.has(paymentId)) return false;
-  processed.add(paymentId);
+const paymentId = webhookPayload.txn_id;
+function claimLock(transactionId) {
+  if (processed.has(transactionId)) return false;
+  processed.add(transactionId);
   return true;
 }
 
@@ -160,4 +143,3 @@ if (failed > 0) {
 } else {
   console.log("All critical security & validation tests passed!\n");
 }
-

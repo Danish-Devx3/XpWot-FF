@@ -1,71 +1,93 @@
-import { getOrderByRazorpayOrderId, saveOrder } from "./database";
-import { prisma, isPrismaConfigured } from "./prisma";
+import { getOrderByZapOrderId, saveOrder } from "./database";
+import { getOrdersCollection } from "./mongodb";
 
-// In-memory set of handled payment IDs to prevent duplicate calls in local dev
-const processedPayments = new Set<string>();
+// In-memory set of handled ZapUPI transaction IDs for local development.
+const processedTransactions = new Set<string>();
 
 /**
  * Atomically checks if a payment has already had its notification dispatched.
- * Using Prisma on MongoDB: performs atomic updateMany with condition { notification_status: { not: "SENT" } }
- * Guarantees that only ONE notification is sent per payment across serverless instances and concurrent webhook/checkout verification.
+ * MongoDB uses one atomic update on the matching order.
+ * Prevents duplicate notifications across serverless instances and concurrent webhook/status checks.
  * Returns true if lock was acquired (caller MUST send notification).
  * Returns false if already processed.
  */
 export async function claimPaymentNotificationLock(
-  razorpayOrderId: string,
-  razorpayPaymentId: string
+  zapOrderId: string,
+  zapTransactionId: string
 ): Promise<boolean> {
   // Quick in-memory deduplication check
-  if (processedPayments.has(razorpayPaymentId)) {
+  if (processedTransactions.has(zapTransactionId)) {
     return false;
   }
 
-  // If Prisma MongoDB is configured, perform atomic condition update
-  if (isPrismaConfigured()) {
-    try {
-      const updateResult = await prisma.order.updateMany({
-        where: {
-          razorpay_order_id: razorpayOrderId,
-          notification_status: { not: "SENT" },
-        },
-        data: {
-          razorpay_payment_id: razorpayPaymentId,
+  const collection = await getOrdersCollection();
+  if (collection) {
+    const result = await collection.updateOne(
+      { zap_order_id: zapOrderId, notification_status: { $ne: "SENT" } },
+      {
+        $set: {
+          zap_txn_id: zapTransactionId,
           notification_status: "SENT",
           payment_status: "PAID",
           updated_at: new Date(),
         },
-      });
-
-      if (updateResult.count > 0) {
-        processedPayments.add(razorpayPaymentId);
-        return true;
-      } else {
-        // Count is 0 -> either order does not exist or notification_status is already SENT
-        processedPayments.add(razorpayPaymentId);
-        return false;
       }
-    } catch (err) {
-      console.error("Prisma atomic lock error:", err);
-    }
+    );
+    processedTransactions.add(zapTransactionId);
+    return result.modifiedCount === 1;
   }
 
   // Fallback to local storage locking
-  const order = await getOrderByRazorpayOrderId(razorpayOrderId);
+  const order = await getOrderByZapOrderId(zapOrderId);
   if (!order) {
     return false;
   }
 
   if (order.notification_status === "SENT") {
-    processedPayments.add(razorpayPaymentId);
+    processedTransactions.add(zapTransactionId);
     return false;
   }
 
-  processedPayments.add(razorpayPaymentId);
-  order.razorpay_payment_id = razorpayPaymentId;
+  processedTransactions.add(zapTransactionId);
+  order.zap_txn_id = zapTransactionId;
   order.notification_status = "SENT";
   order.payment_status = "PAID";
   order.updated_at = new Date().toISOString();
 
   await saveOrder(order);
   return true;
+}
+
+export async function releasePaymentNotificationLock(
+  zapOrderId: string,
+  zapTransactionId: string
+): Promise<void> {
+  const collection = await getOrdersCollection();
+  if (collection) {
+    const now = new Date();
+    const result = await collection.updateOne(
+      {
+        zap_order_id: zapOrderId,
+        zap_txn_id: zapTransactionId,
+        notification_status: "SENT",
+      },
+      { $set: { notification_status: "FAILED", updated_at: now } }
+    );
+    processedTransactions.delete(zapTransactionId);
+    if (result.modifiedCount === 1) {
+      await getOrderByZapOrderId(zapOrderId);
+    }
+    return;
+  }
+
+  const order = await getOrderByZapOrderId(zapOrderId);
+  if (
+    order?.zap_txn_id === zapTransactionId &&
+    order.notification_status === "SENT"
+  ) {
+    order.notification_status = "FAILED";
+    order.updated_at = new Date().toISOString();
+    await saveOrder(order);
+  }
+  processedTransactions.delete(zapTransactionId);
 }

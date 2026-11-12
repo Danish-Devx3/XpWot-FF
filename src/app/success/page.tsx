@@ -34,61 +34,97 @@ interface VerifiedOrderData {
 function SuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("order_id");
-  const paymentId = searchParams.get("payment_id");
+  const paymentId = searchParams.get("txn_id");
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [orderData, setOrderData] = useState<VerifiedOrderData | null>(null);
+  const [gatewayStatus, setGatewayStatus] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!orderId) {
       setError("No valid order identifier was provided. Access denied.");
       setIsLoading(false);
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
+    const validOrderId = orderId;
 
-    // Verify payment status server-side before showing confirmed payment success
     async function verifyOrderOnServer() {
-      try {
-        setIsLoading(true);
-        const res = await fetch(`/api/verify-status?order_id=${encodeURIComponent(orderId!)}`);
-        const data = await res.json();
+      setIsLoading(true);
+      setError(null);
+      setGatewayStatus(null);
 
-        if (res.ok && data.paid) {
-          setOrderData(data);
-          // Trigger celebratory confetti once verified
-          try {
-            confetti({
-              particleCount: 80,
-              spread: 70,
-              origin: { y: 0.6 },
-              colors: ["#FF6B24", "#FF9B45", "#22C55E", "#FFFFFF"],
-            });
-          } catch (e) {
-            // Ignore if canvas confetti not supported
+      try {
+        let lastStatus: string | null = null;
+        let lastMessage = "ZapUPI has not confirmed this payment yet.";
+
+        for (let attempt = 0; attempt < 10; attempt += 1) {
+          const res = await fetch(
+            `/api/verify-status?order_id=${encodeURIComponent(validOrderId)}`,
+            { cache: "no-store" }
+          );
+          const data = await res.json();
+
+          if (cancelled) return;
+
+          if (res.ok && data.paid) {
+            setOrderData(data);
+            try {
+              confetti({
+                particleCount: 80,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ["#FF6B24", "#FF9B45", "#22C55E", "#FFFFFF"],
+              });
+            } catch {
+              // Ignore if canvas confetti is not supported.
+            }
+            return;
           }
-        } else {
+
+          lastStatus = typeof data.gatewayStatus === "string" ? data.gatewayStatus : null;
+          lastMessage = data.gatewayMessage || data.message || data.error || lastMessage;
+          if (lastStatus?.toLowerCase() === "error") {
+            break;
+          }
+          if (attempt < 9) {
+            await new Promise((resolve) => setTimeout(resolve, 2500));
+          }
+        }
+        if (!cancelled) {
+          setGatewayStatus(lastStatus);
           setError(
-            data.message ||
-              "This order has not been verified as paid. If you completed a payment, please contact support with your transaction details."
+            `${lastMessage}. If your account was debited, do not pay again; contact support with your order ID.`
           );
         }
-      } catch (err) {
-        setError("Network error while verifying payment status. Please contact support.");
+      } catch {
+        if (!cancelled) {
+          setError("Could not reach the payment verification service. Please retry or contact support.");
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     }
 
     verifyOrderOnServer();
-  }, [orderId]);
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId, retryCount]);
 
   if (isLoading) {
     return (
       <div className="py-24 text-center max-w-md mx-auto px-4 space-y-4">
         <Loader2 className="w-12 h-12 text-accent animate-spin mx-auto" />
         <h2 className="font-heading font-bold text-xl text-foreground">
-          Verifying Payment with Razorpay...
+          Verifying Payment with ZapUPI...
         </h2>
         <p className="text-xs text-foreground-muted">
           Securing cryptographic receipt and updating order ledger.
@@ -110,7 +146,22 @@ function SuccessContent() {
           <p className="text-sm text-foreground-muted leading-relaxed">
             {error || "Unable to confirm payment status for this transaction."}
           </p>
+          {gatewayStatus && (
+            <p className="text-xs text-foreground-muted">
+              Current ZapUPI status: <strong>{gatewayStatus}</strong>
+            </p>
+          )}
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+            {orderId && (
+              <Button
+                variant="secondary"
+                size="md"
+                className="w-full sm:w-auto"
+                onClick={() => setRetryCount((count) => count + 1)}
+              >
+                Check Again
+              </Button>
+            )}
             <Link href="/" className="w-full sm:w-auto">
               <Button variant="secondary" size="md" className="w-full">
                 Back to Home
@@ -266,4 +317,3 @@ export default function SuccessPage() {
     </Suspense>
   );
 }
-

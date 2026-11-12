@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOrderByRazorpayOrderId } from "@/lib/database";
+import { getOrderByZapOrderId } from "@/lib/database";
 import { getPackageById } from "@/config/packages";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { verifyZapUPIPayment } from "@/lib/zapupi-payment";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const order = await getOrderByRazorpayOrderId(orderId);
+    const order = await getOrderByZapOrderId(orderId);
     if (!order) {
       return NextResponse.json(
         { error: "Order not found" },
@@ -31,35 +32,45 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Only return success if status is PAID or VERIFIED
-    if (order.payment_status !== "PAID" && order.payment_status !== "VERIFIED") {
+    const confirmation = await verifyZapUPIPayment(orderId);
+    if (!confirmation) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    if (!confirmation.paid) {
       return NextResponse.json(
         {
           paid: false,
-          status: order.payment_status,
-          message: "Payment has not yet been verified for this order",
+          status: confirmation.order.payment_status,
+          gatewayStatus: confirmation.gatewayStatus,
+          gatewayMessage: confirmation.gatewayMessage,
+          message:
+            confirmation.gatewayStatus.toLowerCase() === "error"
+              ? confirmation.gatewayMessage || "ZapUPI could not find this order"
+              : "ZapUPI has not confirmed this payment yet",
         },
         { status: 200 }
       );
     }
 
-    const pkg = getPackageById(order.package_id);
+    const confirmedOrder = confirmation.order;
+    const pkg = getPackageById(confirmedOrder.package_id);
 
     return NextResponse.json({
       paid: true,
-      orderId: order.razorpay_order_id,
-      paymentId: order.razorpay_payment_id,
-      amount: order.amount,
-      packageName: pkg ? pkg.name : order.package_id.toUpperCase(),
+      orderId: confirmedOrder.zap_order_id,
+      paymentId: confirmedOrder.zap_txn_id,
+      amount: confirmedOrder.amount,
+      packageName: pkg ? pkg.name : confirmedOrder.package_id.toUpperCase(),
       deliveryEstimate: pkg?.deliveryEstimate || "4 - 8 Hours",
-      customerName: order.customer_details.fullName,
-      whatsappNumber: order.customer_details.whatsappNumber,
-      createdAt: order.created_at,
+      customerName: confirmedOrder.customer_details.fullName,
+      whatsappNumber: confirmedOrder.customer_details.whatsappNumber,
+      createdAt: confirmedOrder.created_at,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("API /api/verify-status error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }
     );
   }

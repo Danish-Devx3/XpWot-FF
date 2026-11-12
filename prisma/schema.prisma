@@ -9,8 +9,10 @@ generator client {
 
 model Order {
   id                  String   @id @default(auto()) @map("_id") @db.ObjectId
-  razorpay_order_id   String   @unique
-  razorpay_payment_id String?  @unique
+  zap_order_id        String   @unique
+  zap_gateway_order_id String?  @unique
+  zap_txn_id          String?  @unique
+  zap_utr             String?
   customer_details    Json
   device_details      Json
   package_id          String
@@ -22,4 +24,3 @@ model Order {
 
   @@map("orders")
 }
-

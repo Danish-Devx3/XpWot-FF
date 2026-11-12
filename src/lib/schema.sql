@@ -3,8 +3,9 @@
 
 CREATE TABLE IF NOT EXISTS public.orders (
     id TEXT PRIMARY KEY,
-    razorpay_order_id TEXT UNIQUE NOT NULL,
-    razorpay_payment_id TEXT UNIQUE,
+    zap_order_id TEXT UNIQUE NOT NULL,
+    zap_txn_id TEXT UNIQUE,
+    zap_utr TEXT,
     customer_details JSONB NOT NULL,
     device_details JSONB NOT NULL,
     package_id TEXT NOT NULL,
@@ -16,8 +17,8 @@ CREATE TABLE IF NOT EXISTS public.orders (
 );
 
 -- Index for high performance lookup by payment status and order ID
-CREATE INDEX IF NOT EXISTS idx_orders_razorpay_order_id ON public.orders(razorpay_order_id);
-CREATE INDEX IF NOT EXISTS idx_orders_razorpay_payment_id ON public.orders(razorpay_payment_id);
+CREATE INDEX IF NOT EXISTS idx_orders_zap_order_id ON public.orders(zap_order_id);
+CREATE INDEX IF NOT EXISTS idx_orders_zap_txn_id ON public.orders(zap_txn_id);
 CREATE INDEX IF NOT EXISTS idx_orders_payment_status ON public.orders(payment_status);
 
 -- Enable Row Level Security (RLS)
@@ -27,4 +28,3 @@ ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Service role full access" ON public.orders
     FOR ALL
     USING (auth.role() = 'service_role');
-

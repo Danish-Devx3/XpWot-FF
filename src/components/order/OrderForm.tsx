@@ -2,10 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ShieldCheck, Lock, AlertCircle, Zap, Loader2, Sparkles } from "lucide-react";
+import { ShieldCheck, Lock, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { orderFormSchema, OrderFormSchemaType } from "@/lib/validation";
 import { SENSI_PACKAGES, PackageId } from "@/config/packages";
@@ -15,18 +14,11 @@ import { DeviceDetails } from "./DeviceDetails";
 import { PlayStyle } from "./PlayStyle";
 import { PackageSelector } from "./PackageSelector";
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
-
 interface OrderFormProps {
   initialPackId?: PackageId;
 }
 
 export function OrderForm({ initialPackId = "pro" }: OrderFormProps) {
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -53,38 +45,12 @@ export function OrderForm({ initialPackId = "pro" }: OrderFormProps) {
   const currentPackage = SENSI_PACKAGES[selectedPackageId] || SENSI_PACKAGES.pro;
   const watchDeviceModel = watch("deviceModel");
 
-  // Helper to load Razorpay checkout script
-  const loadRazorpayScript = (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (typeof window !== "undefined" && window.Razorpay) {
-        return resolve(true);
-      }
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
   const onSubmit = async (data: OrderFormSchemaType) => {
     try {
       setIsSubmitting(true);
       setServerError(null);
       toast.loading("Initiating secure order...", { id: "order-tx" });
 
-      // 1. Load Razorpay SDK
-      const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) {
-        const msg = "Failed to load Razorpay secure checkout. Please check your internet connection.";
-        setServerError(msg);
-        toast.error(msg, { id: "order-tx" });
-        setIsSubmitting(false);
-        return;
-      }
-
-      // 2. Call server endpoint to create order
       const orderRes = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -101,110 +67,19 @@ export function OrderForm({ initialPackId = "pro" }: OrderFormProps) {
         return;
       }
 
-      const { orderId, amount, keyId } = orderData;
+      if (typeof orderData.paymentUrl !== "string") {
+        throw new Error("Payment gateway did not return a payment link.");
+      }
+
       toast.dismiss("order-tx");
-
-      // 3. Configure Razorpay Checkout with explicit UPI & QR Prioritization
-      const options = {
-        key: keyId,
-        amount: amount * 100,
-        currency: "INR",
-        name: "XPWOT",
-        description: `${currentPackage.name} - Free Fire Sensitivity`,
-        order_id: orderId,
-        prefill: {
-          name: data.fullName,
-          contact: data.whatsappNumber.startsWith("+91")
-            ? data.whatsappNumber
-            : `+91${data.whatsappNumber}`,
-          email: `${data.whatsappNumber}@customer.xpwot.com`,
-        },
-        theme: {
-          color: "#FF6B24",
-          backdrop_color: "#08090B",
-        },
-        config: {
-          display: {
-            blocks: {
-              upi: {
-                name: "Pay using UPI / QR Code",
-                instruments: [
-                  {
-                    method: "upi",
-                  },
-                ],
-              },
-              cards: {
-                name: "Cards & NetBanking",
-                instruments: [
-                  {
-                    method: "card",
-                  },
-                  {
-                    method: "netbanking",
-                  },
-                ],
-              },
-            },
-            sequence: ["block.upi", "block.cards"],
-            preferences: {
-              show_default_blocks: true,
-            },
-          },
-        },
-        modal: {
-          confirm_close: true,
-          ondismiss: function () {
-            setIsSubmitting(false);
-          },
-        },
-        handler: async function (response: any) {
-          try {
-            // 4. Verify payment on server
-            const verifyRes = await fetch("/api/verify-payment", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            });
-
-            const verifyData = await verifyRes.json();
-
-            if (verifyRes.ok && verifyData.success) {
-              toast.success("Payment verified! Redirecting to receipt...", { id: "order-tx" });
-              router.push(
-                `/success?order_id=${encodeURIComponent(response.razorpay_order_id)}&payment_id=${encodeURIComponent(response.razorpay_payment_id)}`
-              );
-            } else {
-              const msg = verifyData.error || "Payment verification failed. Please contact support if your money was debited.";
-              setServerError(msg);
-              toast.error(msg, { id: "order-tx" });
-              setIsSubmitting(false);
-            }
-          } catch (err: any) {
-            const msg = "Network error during payment verification. Please check support.";
-            setServerError(msg);
-            toast.error(msg, { id: "order-tx" });
-            setIsSubmitting(false);
-          }
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.on("payment.failed", function (resp: any) {
-        const msg = resp.error?.description || "Payment failed. Please try again with UPI or Card.";
-        setServerError(msg);
-        toast.error(msg, { id: "order-tx" });
-        setIsSubmitting(false);
-      });
-
-      razorpay.open();
-    } catch (err: any) {
+      window.location.assign(orderData.paymentUrl);
+    } catch (err) {
       console.error("Order submission error:", err);
-      setServerError(err?.message || "An unexpected error occurred. Please try again.");
+      const message = err instanceof Error
+        ? err.message
+        : "An unexpected error occurred. Please try again.";
+      setServerError(message);
+      toast.error(message, { id: "order-tx" });
       setIsSubmitting(false);
     }
   };
@@ -274,7 +149,7 @@ export function OrderForm({ initialPackId = "pro" }: OrderFormProps) {
               CHECKOUT & PAYMENT
             </h2>
             <p className="text-xs text-foreground-muted">
-              Secure 256-bit encrypted transaction processed by Razorpay.
+              Secure payment processed by ZapUPI.
             </p>
           </div>
         </div>
@@ -295,7 +170,7 @@ export function OrderForm({ initialPackId = "pro" }: OrderFormProps) {
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-foreground-muted">Payment Gateway:</span>
-            <span className="text-foreground font-medium">Razorpay (UPI, GPay, PhonePe, Cards)</span>
+            <span className="text-foreground font-medium">ZapUPI</span>
           </div>
           <div className="pt-3 border-t border-border flex items-baseline justify-between">
             <span className="font-heading font-bold text-base text-foreground">
@@ -348,7 +223,7 @@ export function OrderForm({ initialPackId = "pro" }: OrderFormProps) {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-xs text-foreground-muted pt-1">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-4 h-4 text-success" />
-            <span>Secure payment powered by Razorpay</span>
+            <span>Secure payment powered by ZapUPI</span>
           </div>
           <span className="hidden sm:inline">•</span>
           <div>Instant Order Confirmation</div>
@@ -379,4 +254,3 @@ export function OrderForm({ initialPackId = "pro" }: OrderFormProps) {
     </form>
   );
 }
-

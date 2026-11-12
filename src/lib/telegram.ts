@@ -16,8 +16,8 @@ export async function sendTelegramOrderNotification(order: OrderRecord): Promise
   const message = [
     "🔥 NEW PAID ORDER RECEIVED 🔥",
     "",
-    `Order ID: ${sanitizeText(order.razorpay_order_id)}`,
-    `Payment ID: ${sanitizeText(order.razorpay_payment_id || "N/A")}`,
+    `Order ID: ${sanitizeText(order.zap_order_id)}`,
+    `Payment ID: ${sanitizeText(order.zap_txn_id || "N/A")}`,
     `Amount: ₹${order.amount}`,
     `Pack: ${order.package_id.toUpperCase()} PACK`,
     "",
@@ -65,4 +65,3 @@ export async function sendTelegramOrderNotification(order: OrderRecord): Promise
     return false;
   }
 }
-

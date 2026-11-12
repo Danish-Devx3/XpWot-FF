@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { orderFormSchema } from "@/lib/validation";
 import { getPackageById } from "@/config/packages";
-import { razorpayInstance } from "@/lib/razorpay";
+import { createZapUPIOrder } from "@/lib/zapupi";
 import { saveOrder } from "@/lib/database";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { OrderRecord } from "@/types/order";
@@ -38,35 +39,10 @@ export async function POST(req: NextRequest) {
     }
 
     const amountInINR = selectedPackage.price;
-    const amountInPaise = amountInINR * 100;
-    const receiptId = `rcpt_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
-
-    // 4. Create Razorpay Order
-    const razorpayOrder = await razorpayInstance.orders.create({
-      amount: amountInPaise,
-      currency: "INR",
-      receipt: receiptId,
-      notes: {
-        fullName: data.fullName,
-        gameId: data.gameId,
-        whatsappNumber: data.whatsappNumber,
-        deviceModel: data.deviceModel,
-        packageId: data.packageId,
-        packageName: selectedPackage.name,
-      },
-    });
-
-    if (!razorpayOrder || !razorpayOrder.id) {
-      return NextResponse.json(
-        { error: "Failed to initiate payment gateway order" },
-        { status: 500 }
-      );
-    }
-
-    // 5. Save order in storage
+    const orderId = `xpwot_${randomUUID().replace(/-/g, "")}`;
     const newOrder: OrderRecord = {
-      id: razorpayOrder.id,
-      razorpay_order_id: razorpayOrder.id,
+      id: orderId,
+      zap_order_id: orderId,
       customer_details: {
         fullName: data.fullName,
         gameId: data.gameId,
@@ -93,18 +69,54 @@ export async function POST(req: NextRequest) {
 
     await saveOrder(newOrder);
 
+    const zapOrder = await createZapUPIOrder(
+      orderId,
+      amountInINR,
+      data.whatsappNumber,
+      `${selectedPackage.name} | ${data.gameId}`
+    );
+    const successfulResponse =
+      zapOrder.status === true ||
+      (typeof zapOrder.status === "string" &&
+        ["success", "true"].includes(zapOrder.status.toLowerCase()));
+
+    if (!successfulResponse || !zapOrder.payment_url || !zapOrder.order_id) {
+      newOrder.payment_status = "FAILED";
+      newOrder.updated_at = new Date().toISOString();
+      await saveOrder(newOrder);
+      return NextResponse.json(
+        { error: "Failed to initiate ZapUPI payment. Please try again." },
+        { status: 502 }
+      );
+    }
+
+    newOrder.zap_gateway_order_id = zapOrder.order_id;
+    newOrder.updated_at = new Date().toISOString();
+    await saveOrder(newOrder);
+
+    let paymentUrl: URL;
+    try {
+      paymentUrl = new URL(zapOrder.payment_url);
+    } catch {
+      throw new Error("ZapUPI returned an invalid payment URL");
+    }
+
+    if (paymentUrl.protocol !== "https:") {
+      throw new Error("ZapUPI returned an insecure payment URL");
+    }
+
     return NextResponse.json({
       success: true,
-      orderId: razorpayOrder.id,
+      orderId,
       amount: amountInINR,
       currency: "INR",
-      keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID,
+      paymentUrl: paymentUrl.toString(),
       packageName: selectedPackage.name,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("API /api/create-order error:", error);
     return NextResponse.json(
-      { error: error?.message || "Internal server error occurred while creating order" },
+      { error: "Unable to create your order right now. Please try again shortly." },
       { status: 500 }
     );
   }

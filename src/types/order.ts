@@ -28,8 +28,10 @@ export type NotificationStatus = "PENDING" | "SENT" | "FAILED";
 
 export interface OrderRecord {
   id: string;
-  razorpay_order_id: string;
-  razorpay_payment_id?: string;
+  zap_order_id: string;
+  zap_gateway_order_id?: string;
+  zap_txn_id?: string;
+  zap_utr?: string;
   customer_details: {
     fullName: string;
     gameId: string;
@@ -53,4 +55,3 @@ export interface OrderRecord {
   created_at: string;
   updated_at: string;
 }
-

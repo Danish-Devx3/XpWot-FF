@@ -72,7 +72,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/order?pack=pro" className="hover:text-accent transition-colors">
+                <Link href="/order?pack=premium" className="hover:text-accent transition-colors">
                   Build Your Sensi
                 </Link>
               </li>
@@ -148,4 +148,3 @@ export function Footer() {
     </footer>
   );
 }
-

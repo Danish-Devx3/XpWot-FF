@@ -97,7 +97,7 @@ export function MobileMenu({ isOpen, onClose, activePath }: MobileMenuProps) {
 
             {/* Bottom Actions */}
             <div className="pt-6 border-t border-border space-y-3">
-              <Link href="/order?pack=pro" onClick={onClose} className="w-full block">
+              <Link href="/order?pack=premium" onClick={onClose} className="w-full block">
                 <Button variant="primary" size="lg" className="w-full">
                   GET YOUR SENSI
                 </Button>
@@ -114,4 +114,3 @@ export function MobileMenu({ isOpen, onClose, activePath }: MobileMenuProps) {
     </AnimatePresence>
   );
 }
-

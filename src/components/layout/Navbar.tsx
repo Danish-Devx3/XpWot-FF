@@ -75,7 +75,7 @@ export function Navbar() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/order?pack=pro">
+            <Link href="/order?pack=premium">
               <Button
                 variant="primary"
                 size="md"
@@ -88,7 +88,7 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <div className="flex md:hidden items-center gap-2">
-            <Link href="/order?pack=pro">
+            <Link href="/order?pack=premium">
               <Button variant="primary" size="sm" className="px-3 py-1.5 text-xs">
                 GET SENSI
               </Button>
@@ -113,4 +113,3 @@ export function Navbar() {
     </>
   );
 }
-

@@ -31,7 +31,7 @@ export function FinalCTA() {
             </p>
 
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/order?pack=pro" className="w-full sm:w-auto">
+              <Link href="/order?pack=premium" className="w-full sm:w-auto">
                 <Button
                   variant="primary"
                   size="lg"
@@ -59,4 +59,3 @@ export function FinalCTA() {
     </section>
   );
 }
-

@@ -35,7 +35,7 @@ export function FAQ() {
       id: "faq-5",
       question: "How long does delivery take?",
       answer:
-        "Basic Pack settings are delivered within 12 - 24 hours. Pro Pack orders receive priority delivery within 4 - 8 hours. Premium Tournament orders receive express priority delivery within 2 - 4 hours.",
+        "The Premium Pack is delivered within 2 - 4 hours.",
     },
     {
       id: "faq-6",
@@ -107,4 +107,3 @@ export function FAQ() {
     </section>
   );
 }
-

@@ -84,7 +84,7 @@ export function Hero() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2"
             >
-              <Link href="/order?pack=pro" className="w-full sm:w-auto">
+              <Link href="/order?pack=premium" className="w-full sm:w-auto">
                 <Button
                   variant="primary"
                   size="lg"

@@ -9,6 +9,7 @@
 
 - **Esports Dark Aesthetics**: Futuristic gaming design with dark palette (`#08090B`, `#101216`, `#15181E`), neon orange accents (`#FF6B24`), ambient glow, Space Grotesk headings, and Inter body text.
 - **Hardware-Specific Sensitivity Profiling**: Customers select exact phone model, RAM size (2GB to 12GB+), screen refresh rate (60Hz–144Hz), device DPI, target speed, primary play style (Rusher, Sniper, Balanced), and claw finger layout (2, 3, 4, 5+ fingers).
+- **Single Premium Offer**: One Premium pack for all Android devices, customized to each customer's phone details, priced at ₹349 (reduced from ₹500).
 - **Production Payment Security**:
   - Authoritative server-side pricing from `src/config/packages.ts` (client values are never trusted).
   - ZapUPI order creation with server-validated INR pricing and same-tab payment redirects.
@@ -233,8 +234,8 @@ server-side verification result.
 
 Order ID: xpwot_4c8f...
 Payment ID: ZAPUPI66f10bd3c1f28
-Amount: ₹599
-Pack: PRO PACK
+Amount: ₹349
+Pack: PREMIUM PACK
 
 👤 PLAYER DETAILS:
 Name: Sudhanshu Sinha
@@ -297,7 +298,7 @@ Run the automated verification suite:
 node scripts/test-suite.js
 ```
 - [x] Every navbar link points to valid sections (`/#packs`, `/#how-it-works`, `/#faq`, `/contact`).
-- [x] Every pricing CTA carries the selected pack query param (`/order?pack=basic`, `pro`, `premium`).
+- [x] The single Premium pricing CTA links to `/order?pack=premium`.
 - [x] Client form validates Free Fire UID (must be numbers only, 6–15 digits).
 - [x] Client form validates Indian WhatsApp numbers (strictly 10 digits starting with 6, 7, 8, or 9).
 - [x] Unchecked terms checkbox prevents payment submission.

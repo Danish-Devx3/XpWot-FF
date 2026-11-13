@@ -25,12 +25,12 @@ export function PackageSelector({ setValue, watch }: PackageSelectorProps) {
             SELECT SENSI PACK
           </h2>
           <p className="text-xs text-foreground-muted">
-            All prices match official server configurations. Choose your tier.
+            One premium pack for all Android devices, personalized to your phone.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {PACKAGE_IDS.map((id) => {
           const pack = SENSI_PACKAGES[id];
           const isSelected = selectedPackageId === id;
@@ -82,4 +82,3 @@ export function PackageSelector({ setValue, watch }: PackageSelectorProps) {
     </div>
   );
 }
-

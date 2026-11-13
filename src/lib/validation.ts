@@ -80,7 +80,7 @@ export const orderFormSchema = z.object({
     }
   ),
 
-  packageId: z.enum(["basic", "pro", "premium"], {
+  packageId: z.enum(["premium"], {
     errorMap: () => ({ message: "Please select a valid sensi pack" }),
   }),
 

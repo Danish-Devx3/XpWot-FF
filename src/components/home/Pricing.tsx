@@ -7,11 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 
 export function Pricing() {
-  const packs = [
-    SENSI_PACKAGES.basic,
-    SENSI_PACKAGES.pro,
-    SENSI_PACKAGES.premium,
-  ];
+  const packs = PACKAGE_IDS.map((id) => SENSI_PACKAGES[id]);
 
   return (
     <section id="packs" className="py-20 md:py-32 relative bg-background-secondary/40 border-y border-border">
@@ -22,24 +18,23 @@ export function Pricing() {
             TRANSPARENT PRICING
           </Badge>
           <h2 className="font-heading font-black text-3xl sm:text-4xl md:text-5xl text-foreground uppercase tracking-tight">
-            FIND YOUR <span className="text-accent">PERFECT SENSI</span>
+            ONE PREMIUM PACK. <span className="text-accent">MADE FOR YOUR ANDROID.</span>
           </h2>
           <p className="text-foreground-muted text-sm sm:text-base">
-            Choose your level. We&apos;ll handle the device calibration and deliver your optimal settings.
+            Get every feature for ₹349, customized to your Android device.
           </p>
         </div>
 
-        {/* 3 Pricing Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+        <div className="grid grid-cols-1 gap-8 items-stretch max-w-xl mx-auto">
           {packs.map((pack) => {
-            const isPro = pack.isPopular;
+            const isFeatured = pack.isPopular;
 
             return (
               <Card
                 key={pack.id}
                 hoverEffect
                 className={`flex flex-col justify-between p-8 relative transition-all duration-300 ${
-                  isPro
+                  isFeatured
                     ? "bg-background-elevated/90 border-accent shadow-glow-orange lg:-translate-y-2 ring-1 ring-accent/30"
                     : "bg-background-card/90 border-border"
                 }`}
@@ -103,12 +98,12 @@ export function Pricing() {
 
                   <Link href={`/order?pack=${pack.id}`} className="block w-full">
                     <Button
-                      variant={isPro ? "primary" : "secondary"}
+                      variant={isFeatured ? "primary" : "secondary"}
                       size="lg"
                       className="w-full font-heading"
-                      rightIcon={isPro ? <Zap className="w-4 h-4 fill-white" /> : undefined}
+                      rightIcon={isFeatured ? <Zap className="w-4 h-4 fill-white" /> : undefined}
                     >
-                      {isPro ? "GET PRO SENSI" : `GET ${pack.name}`}
+                      GET PREMIUM SENSI
                     </Button>
                   </Link>
 
@@ -125,4 +120,3 @@ export function Pricing() {
     </section>
   );
 }
-

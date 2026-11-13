@@ -18,7 +18,7 @@ interface OrderFormProps {
   initialPackId?: PackageId;
 }
 
-export function OrderForm({ initialPackId = "pro" }: OrderFormProps) {
+export function OrderForm({ initialPackId = "premium" }: OrderFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -42,7 +42,7 @@ export function OrderForm({ initialPackId = "pro" }: OrderFormProps) {
   });
 
   const selectedPackageId = watch("packageId");
-  const currentPackage = SENSI_PACKAGES[selectedPackageId] || SENSI_PACKAGES.pro;
+  const currentPackage = SENSI_PACKAGES[selectedPackageId] || SENSI_PACKAGES.premium;
   const watchDeviceModel = watch("deviceModel");
 
   const onSubmit = async (data: OrderFormSchemaType) => {

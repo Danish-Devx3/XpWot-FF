@@ -27,7 +27,7 @@ const orderFormSchema = z.object({
   sensiPreference: z.enum(["HIGH", "BALANCED", "LOW"]),
   playStyle: z.enum(["RUSHER", "SNIPER", "BALANCED"]),
   fingerLayout: z.enum(["2 Fingers", "3 Fingers", "4 Fingers", "5 Fingers"]),
-  packageId: z.enum(["basic", "pro", "premium"]),
+  packageId: z.enum(["premium"]),
   termsAccepted: z.boolean().refine((v) => v === true),
 });
 
@@ -60,11 +60,16 @@ const validPayload = {
   sensiPreference: "HIGH",
   playStyle: "RUSHER",
   fingerLayout: "4 Fingers",
-  packageId: "pro",
+  packageId: "premium",
   termsAccepted: true,
 };
 
 assert(orderFormSchema.safeParse(validPayload).success, "Valid payload passes");
+assert(
+  !orderFormSchema.safeParse({ ...validPayload, packageId: "basic" }).success &&
+    !orderFormSchema.safeParse({ ...validPayload, packageId: "pro" }).success,
+  "Only the Premium package is accepted"
+);
 
 // Pasted Phone with +91 and spaces
 const formattedPhone = { ...validPayload, whatsappNumber: "+91 93419 23708" };
@@ -105,8 +110,8 @@ const webhookPayload = {
   order_id: "xpwot_123",
   status: "Success",
   txn_id: "ZAPUPI123",
-  amount: "599.00",
-  pay_amount: "599.00",
+  amount: "349.00",
+  pay_amount: "349.00",
   utr: "123456789",
   environment: "test",
   customer_mobile: "9341923708",
@@ -116,7 +121,7 @@ const webhookPayload = {
 };
 assert(zapupiWebhookSchema.safeParse(webhookPayload).success, "Valid ZapUPI webhook payload passes");
 assert(
-  zapupiWebhookSchema.safeParse({ ...webhookPayload, amount: 599, pay_amount: 599 }).success,
+  zapupiWebhookSchema.safeParse({ ...webhookPayload, amount: 349, pay_amount: 349 }).success,
   "Numeric amount values pass webhook validation"
 );
 assert(!zapupiWebhookSchema.safeParse({ ...webhookPayload, order_id: "" }).success, "Webhook without an order ID fails");

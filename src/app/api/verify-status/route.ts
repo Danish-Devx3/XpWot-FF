@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
       paymentId: confirmedOrder.zap_txn_id,
       amount: confirmedOrder.amount,
       packageName: pkg ? pkg.name : confirmedOrder.package_id.toUpperCase(),
-      deliveryEstimate: pkg?.deliveryEstimate || "4 - 8 Hours",
+      deliveryEstimate: pkg?.deliveryEstimate || "2 - 4 Hours",
       customerName: confirmedOrder.customer_details.fullName,
       whatsappNumber: confirmedOrder.customer_details.whatsappNumber,
       createdAt: confirmedOrder.created_at,

@@ -16,13 +16,7 @@ interface OrderPageProps {
 }
 
 export default function OrderPage({ searchParams }: OrderPageProps) {
-  const initialPackId = (
-    searchParams.pack === "basic" ||
-    searchParams.pack === "pro" ||
-    searchParams.pack === "premium"
-      ? searchParams.pack
-      : "pro"
-  ) as PackageId;
+  const initialPackId: PackageId = "premium";
 
   return (
     <div className="py-12 md:py-20 relative bg-grid-pattern min-h-screen">
@@ -54,4 +48,3 @@ export default function OrderPage({ searchParams }: OrderPageProps) {
     </div>
   );
 }
-

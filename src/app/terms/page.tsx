@@ -81,9 +81,7 @@ export default function TermsPage() {
             To guarantee personalized quality control, sensitivity settings are prepared by human sensitivity analysts and delivered manually to the customer&apos;s registered WhatsApp or Telegram handle.
           </p>
           <ul className="list-disc pl-6 space-y-1.5 text-sm">
-            <li><strong>Basic Pack:</strong> Delivered within 12 - 24 hours.</li>
-            <li><strong>Pro Pack:</strong> Priority delivery within 4 - 8 hours.</li>
-            <li><strong>Premium Tournament Pack:</strong> Express priority delivery within 2 - 4 hours.</li>
+            <li><strong>Premium Pack:</strong> Delivered within 2 - 4 hours.</li>
           </ul>
         </section>
 

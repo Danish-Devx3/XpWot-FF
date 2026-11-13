@@ -4,12 +4,13 @@ import { OrderForm } from "@/components/order/OrderForm";
 import { Badge } from "@/components/ui/Badge";
 import { ShieldCheck, Crosshair, Sparkles } from "lucide-react";
 import { PackageId } from "@/config/packages";
+import { createPageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
-  title: "Order Your Custom Sensitivity Pack | XPWOT",
-  description:
-    "Enter your phone brand, RAM, screen refresh rate and play style to get customized Free Fire sensitivity settings.",
-};
+export const metadata: Metadata = createPageMetadata(
+  "Custom Free Fire Sensitivity Pack",
+  "Share your phone model, RAM, and play style to order personalized Free Fire sensitivity settings from XPWOT.",
+  "/order"
+);
 
 interface OrderPageProps {
   searchParams: { pack?: string };

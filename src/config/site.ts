@@ -1,9 +1,11 @@
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://xpwot.com";
+
 export const siteConfig = {
   name: "XPWOT",
   tagline: "Precision Meets Performance",
   description: "Premium Free Fire and Free Fire MAX sensitivity customization store. Stop guessing your sensitivity. Get customized settings tailored to your smartphone model, RAM, refresh rate, and finger play style.",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://xpwot.com",
-  ogImage: "https://xpwot.com/og-image.png",
+  url: siteUrl.replace(/\/+$/, ""),
+  ogImage: "/opengraph-image.png",
   disclaimer: "XPWOT is an independent third-party service and is not affiliated with, endorsed by, or sponsored by Garena or Free Fire.",
   contact: {
     whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919341923708",

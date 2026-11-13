@@ -2,14 +2,16 @@ import React from "react";
 import type { Metadata } from "next";
 import { MessageCircle, Send, Clock, ShieldCheck, Mail, Sparkles } from "lucide-react";
 import { siteConfig } from "@/config/site";
+import { createPageMetadata } from "@/lib/metadata";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
-export const metadata: Metadata = {
-  title: "Contact Support | XPWOT Esports Sensitivity",
-  description: "Get in touch with the XPWOT human support team via WhatsApp and Telegram for device sensitivity inquiries and order delivery support.",
-};
+export const metadata: Metadata = createPageMetadata(
+  "Contact XPWOT Support",
+  "Get help with Free Fire sensitivity settings, device compatibility, or an existing order from XPWOT support.",
+  "/contact"
+);
 
 export default function ContactPage() {
   return (
@@ -166,4 +168,3 @@ export default function ContactPage() {
     </div>
   );
 }
-

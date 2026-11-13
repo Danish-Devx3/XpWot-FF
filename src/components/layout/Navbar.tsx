@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Zap, Crosshair } from "lucide-react";
@@ -11,6 +11,9 @@ export function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,7 +40,7 @@ export function Navbar() {
             : "bg-background/60 backdrop-blur-sm border-b border-border/40"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-accent to-accent-secondary flex items-center justify-center font-heading font-black text-white text-xl tracking-tighter shadow-glow-orange group-hover:scale-105 transition-transform duration-200">
@@ -61,7 +64,7 @@ export function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`px-3.5 py-2 rounded-lg font-heading text-sm transition-all duration-200 ${
+                  className={`rounded-lg px-3 py-2 font-heading text-sm transition-colors duration-200 ${
                     isActive
                       ? "text-accent font-semibold bg-accent/10"
                       : "text-foreground-muted hover:text-white hover:bg-background-elevated/40"
@@ -94,9 +97,12 @@ export function Navbar() {
               </Button>
             </Link>
             <button
+              ref={menuButtonRef}
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open navigation menu"
-              className="p-2 rounded-lg bg-background-card border border-border text-foreground-muted hover:text-white focus:outline-none"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation"
+              className="rounded-lg border border-border bg-background-card p-2 text-foreground-muted transition-colors hover:border-accent/40 hover:text-white focus:outline-none"
             >
               <Menu className="w-6 h-6" />
             </button>
@@ -107,8 +113,9 @@ export function Navbar() {
       {/* Slide-over Mobile Navigation */}
       <MobileMenu
         isOpen={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
+        onClose={closeMobileMenu}
         activePath={pathname}
+        triggerRef={menuButtonRef}
       />
     </>
   );

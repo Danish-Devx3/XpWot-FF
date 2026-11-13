@@ -1,6 +1,7 @@
 import React from "react";
 import { Hero } from "@/components/home/Hero";
 import { TrustStrip } from "@/components/home/TrustStrip";
+import { DpiCalculator } from "@/components/home/DpiCalculator";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { Pricing } from "@/components/home/Pricing";
 import { DeviceCompatibility } from "@/components/home/DeviceCompatibility";
@@ -13,6 +14,7 @@ export default function HomePage() {
     <div className="flex flex-col">
       <Hero />
       <TrustStrip />
+      <DpiCalculator />
       <HowItWorks />
       <Pricing />
       <DeviceCompatibility />
@@ -22,4 +24,3 @@ export default function HomePage() {
     </div>
   );
 }
-

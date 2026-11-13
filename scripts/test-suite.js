@@ -4,6 +4,7 @@
  */
 
 const { z } = require("zod");
+const { getRecommendedDpi } = require("../src/lib/dpi-calculator");
 
 // 1. Re-run Validation Schema Tests
 const orderFormSchema = z.object({
@@ -69,6 +70,31 @@ assert(
   !orderFormSchema.safeParse({ ...validPayload, packageId: "basic" }).success &&
     !orderFormSchema.safeParse({ ...validPayload, packageId: "pro" }).success,
   "Only the Premium package is accepted"
+);
+
+console.log("\n=== 2. DPI CALCULATOR TESTS ===");
+for (const [ram, expectedDpi] of [
+  ["4GB", 528],
+  ["6GB", 514],
+  ["8GB", 497],
+  ["12GB", 487],
+]) {
+  assert(
+    getRecommendedDpi(ram, 360) === expectedDpi,
+    `${ram} RAM at 360 DPI recommends ${expectedDpi}`
+  );
+}
+assert(
+  getRecommendedDpi("8GB", 411) === null,
+  "Unsupported current DPI has no recommendation"
+);
+assert(
+  getRecommendedDpi("16GB", 360) === null,
+  "Unsupported RAM has no recommendation"
+);
+assert(
+  getRecommendedDpi("8GB", 360.5) === null,
+  "Non-integer current DPI has no recommendation"
 );
 
 // Pasted Phone with +91 and spaces

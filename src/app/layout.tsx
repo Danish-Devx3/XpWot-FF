@@ -7,11 +7,11 @@ import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
   title: {
-    default: "XPWOT — Premium Free Fire Sensitivity Store | Precision Meets Performance",
-    template: "%s | XPWOT Esports Sensitivity",
+    default: "Free Fire Sensitivity Settings for Your Phone | XPWOT",
+    template: "%s | XPWOT",
   },
   description:
-    "Get customized Free Fire and Free Fire MAX sensitivity settings tailored to your smartphone model, RAM, refresh rate, and finger play style. Stop guessing, play with precision.",
+    "Find a Free Fire sensitivity starting profile for your phone and play style, or get custom settings tuned to your device. No game login required.",
   keywords: [
     "Free Fire sensitivity",
     "Free Fire MAX sensi settings",
@@ -30,24 +30,43 @@ export const metadata: Metadata = {
     apple: "/favicon.svg",
   },
   metadataBase: new URL(siteConfig.url),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: siteConfig.url,
-    title: "XPWOT — Precision Meets Performance | Custom Free Fire Sensitivity",
+    url: "/",
+    title: "Free Fire Sensitivity Settings for Your Phone | XPWOT",
     description:
-      "Stop guessing your sensitivity. Get custom Free Fire settings calibrated specifically for your smartphone hardware and play style.",
+      "Find a Free Fire sensitivity starting profile for your phone and play style, or get custom settings tuned to your device.",
     siteName: "XPWOT",
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: "XPWOT — device-specific Free Fire sensitivity settings",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "XPWOT — Custom Free Fire Sensitivity Store",
+    title: "Free Fire Sensitivity Settings for Your Phone | XPWOT",
     description:
-      "Settings tailored to your exact smartphone, RAM, and claw layout. Instant manual delivery via WhatsApp & Telegram.",
+      "Find a Free Fire sensitivity starting profile for your phone and play style, or get custom settings tuned to your device.",
+    images: [siteConfig.ogImage],
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 

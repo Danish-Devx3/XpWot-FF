@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight, ShieldCheck, Flame, MessageSquare } from "lucide-react";
@@ -11,9 +11,47 @@ interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
   activePath: string;
+  triggerRef: React.RefObject<HTMLButtonElement>;
 }
 
-export function MobileMenu({ isOpen, onClose, activePath }: MobileMenuProps) {
+export function MobileMenu({ isOpen, onClose, activePath, triggerRef }: MobileMenuProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    closeButtonRef.current?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+      const focusableElements = panelRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled])'
+      );
+      if (!focusableElements?.length) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      if (isOpen) triggerRef.current?.focus();
+    };
+  }, [isOpen, onClose, triggerRef]);
+
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Sensi Packs", href: "/#packs" },
@@ -41,7 +79,12 @@ export function MobileMenu({ isOpen, onClose, activePath }: MobileMenuProps) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 220 }}
-            className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-background-card border-l border-border p-6 z-50 flex flex-col justify-between shadow-2xl md:hidden"
+            id="mobile-navigation"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation"
+            ref={panelRef}
+            className="fixed bottom-0 right-0 top-0 z-50 flex w-[85%] max-w-sm flex-col justify-between border-l border-border bg-background-card p-6 shadow-2xl md:hidden"
           >
             <div>
               {/* Header */}
@@ -55,6 +98,7 @@ export function MobileMenu({ isOpen, onClose, activePath }: MobileMenuProps) {
                   </span>
                 </div>
                 <button
+                  ref={closeButtonRef}
                   onClick={onClose}
                   aria-label="Close menu"
                   className="w-9 h-9 rounded-lg bg-background-elevated border border-border flex items-center justify-center text-foreground-muted hover:text-white"

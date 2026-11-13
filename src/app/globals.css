@@ -9,6 +9,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
   color-scheme: dark;
 }
 
@@ -18,6 +19,17 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
   min-height: 100vh;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(255, 107, 36, 0.3);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid #FF9B45;
+  outline-offset: 3px;
 }
 
 /* Custom Esports Scrollbar */
@@ -97,4 +109,15 @@ body {
   right: 0;
   border-bottom: 2px solid #FF6B24;
   border-right: 2px solid #FF6B24;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

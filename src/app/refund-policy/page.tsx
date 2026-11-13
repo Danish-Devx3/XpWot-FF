@@ -3,11 +3,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, AlertTriangle, ShieldCheck, HelpCircle } from "lucide-react";
 import { siteConfig } from "@/config/site";
+import { createPageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
-  title: "Refund & Cancellation Policy | XPWOT",
-  description: "Transparent, fair refund and cancellation guidelines for XPWOT sensitivity packages under Indian Consumer Protection laws.",
-};
+export const metadata: Metadata = createPageMetadata(
+  "Refund and Cancellation Policy",
+  "Read XPWOT's refund and cancellation policy for custom Free Fire sensitivity services and digital orders.",
+  "/refund-policy"
+);
 
 export default function RefundPolicyPage() {
   return (

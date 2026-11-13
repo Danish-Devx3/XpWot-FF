@@ -11,8 +11,6 @@ import {
   Crosshair,
   ArrowRight,
   Sparkles,
-  CheckCircle2,
-  Cpu,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -31,18 +29,18 @@ export function Hero() {
     setHudValues((prev) => ({ ...prev, [label]: value }));
   };
   return (
-    <section className="relative pt-8 pb-20 md:pt-16 md:pb-32 overflow-hidden bg-grid-pattern">
+    <section className="relative overflow-hidden bg-grid-pattern pb-16 pt-10 md:pb-24 md:pt-16">
       {/* Background ambient lighting */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-accent/10 rounded-full blur-[140px] pointer-events-none -z-10" />
       <div className="absolute top-10 right-10 w-72 h-72 bg-accent/5 rounded-full blur-[100px] pointer-events-none -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-10">
           {/* Left Column: Headline & Action */}
-          <div className="lg:col-span-7 space-y-6 md:space-y-8 text-center lg:text-left">
+          <div className="space-y-6 text-center md:space-y-7 lg:col-span-7 lg:text-left">
             {/* Badge */}
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className="inline-flex items-center justify-center lg:justify-start"
@@ -55,10 +53,10 @@ export function Hero() {
 
             {/* Main Headline */}
             <motion.h1
-              initial={{ opacity: 0, y: 15 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="font-heading font-black text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight leading-[1.05] text-white uppercase"
+              className="font-heading text-4xl font-black uppercase leading-[1.05] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl"
             >
               YOUR AIM. <br />
               YOUR DEVICE. <br />
@@ -69,72 +67,67 @@ export function Hero() {
 
             {/* Description */}
             <motion.p
-              initial={{ opacity: 0, y: 15 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-foreground-muted text-base sm:text-lg md:text-xl max-w-2xl mx-auto lg:mx-0 leading-relaxed font-sans"
             >
-              Get sensitivity settings tailored to your smartphone, RAM, refresh rate and playing style. Stop guessing. Start playing with settings made for your setup.
+              Start with a free sensitivity profile based on your phone and play style. No game login needed—just a clearer starting point for your setup.
             </motion.p>
 
             {/* CTA Buttons */}
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2"
+              className="flex flex-col items-center justify-center gap-3 pt-1 sm:flex-row lg:justify-start"
             >
-              <Link href="/order?pack=premium" className="w-full sm:w-auto">
+              <Link href="#finder" className="w-full sm:w-auto">
                 <Button
                   variant="primary"
                   size="lg"
-                  className="w-full sm:w-auto text-base shadow-glow-orange-lg font-heading"
-                  rightIcon={<Zap className="w-5 h-5 fill-white" />}
+                  className="w-full font-heading text-base shadow-glow-orange-lg sm:w-auto"
+                  rightIcon={<ArrowRight className="h-4 w-4" />}
                 >
-                  GET YOUR SENSI
+                  TRY THE FREE FINDER
                 </Button>
               </Link>
               <Link href="#packs" className="w-full sm:w-auto">
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   size="lg"
-                  className="w-full sm:w-auto text-base font-heading"
-                  rightIcon={<ArrowRight className="w-4 h-4" />}
+                  className="w-full font-heading text-base sm:w-auto"
+                  rightIcon={<Zap className="h-4 w-4" />}
                 >
-                  EXPLORE PACKS
+                  VIEW PREMIUM PACK
                 </Button>
               </Link>
             </motion.div>
 
-            {/* Below Buttons Trust Indicators */}
             <motion.div
-              initial={{ opacity: 0 }}
+              initial={false}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-y-2 gap-x-6 text-xs text-foreground-muted font-heading"
+              className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-1 text-xs text-foreground-muted lg:justify-start"
             >
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-accent" />
-                <span>Device-specific customization</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-accent" />
-                <span>Secure ZapUPI checkout</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-accent" />
-                <span>Manual delivery</span>
-              </div>
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-success" />
+                No game password or OTP
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Crosshair className="h-4 w-4 text-accent" />
+                Free starting profile
+              </span>
             </motion.div>
           </div>
 
           {/* Right Column: Esports Smartphone Mockup & HUD Configuration */}
-          <div className="lg:col-span-5 flex items-center justify-center relative">
+          <div className="relative flex items-center justify-center lg:col-span-5">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={false}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="relative w-full max-w-[380px] sm:max-w-[420px]"
+              className="relative w-full max-w-[360px] sm:max-w-[400px]"
             >
               {/* Outer Glow Halo */}
               <div className="absolute inset-0 -m-6 bg-gradient-to-r from-accent/20 to-accent-secondary/10 rounded-3xl blur-2xl -z-10" />
@@ -148,17 +141,17 @@ export function Hero() {
                 </div>
 
                 {/* Smartphone Screen Content: Esports HUD */}
-                <div className="bg-background rounded-[24px] p-5 border border-border/80 relative overflow-hidden space-y-4">
+                <div className="relative space-y-4 overflow-hidden rounded-[24px] border border-border/80 bg-background p-5">
                   {/* Top HUD Header */}
                   <div className="flex items-center justify-between border-b border-border/60 pb-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-success animate-ping" />
-                      <span className="text-[11px] font-mono text-success font-semibold tracking-wider">
-                        HUD CALIBRATED
+                      <div className="h-2 w-2 rounded-full bg-accent" />
+                      <span className="text-[11px] font-mono font-semibold tracking-wider text-accent">
+                        SAMPLE PROFILE
                       </span>
                     </div>
-                    <span className="text-[10px] font-mono text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20">
-                      120Hz ULTRA
+                    <span className="rounded border border-border bg-background-elevated px-2 py-0.5 text-[10px] font-mono text-foreground-muted">
+                      EXAMPLE
                     </span>
                   </div>
 
@@ -166,7 +159,7 @@ export function Hero() {
                   <div className="p-3 rounded-xl bg-background-elevated/70 border border-border flex items-center justify-between">
                     <div>
                       <div className="text-[10px] text-foreground-muted uppercase font-heading">
-                        Target Phone
+                        Example phone
                       </div>
                       <div className="text-xs font-heading font-bold text-foreground">
                         Poco X6 Pro / Redmi Note 13
@@ -206,6 +199,7 @@ export function Hero() {
                               max="100"
                               value={currentVal}
                               onChange={(e) => handleSliderChange(item.label, Number(e.target.value))}
+                              aria-label={`${item.label} sample sensitivity`}
                               className="w-full h-1.5 bg-background-elevated rounded-full appearance-none cursor-pointer accent-accent"
                             />
                           </div>
@@ -216,8 +210,8 @@ export function Hero() {
 
                   {/* DPI / Touch Response Footnote */}
                   <div className="pt-2 flex items-center justify-between text-[10px] font-mono text-foreground-muted border-t border-border/50">
-                    <span>Rec. DPI: 411</span>
-                    <span>Touch Rate: 360Hz</span>
+                    <span>Example DPI: 411</span>
+                    <span>Device-specific tuning</span>
                   </div>
                 </div>
               </div>
@@ -233,10 +227,10 @@ export function Hero() {
                 </div>
                 <div>
                   <div className="text-[10px] font-mono text-accent font-bold tracking-wider">
-                    DEVICE OPTIMIZED
+                    DEVICE MATCHED
                   </div>
                   <div className="text-xs text-foreground font-heading font-medium">
-                    Zero Screen Shake
+                    Tuned to your phone
                   </div>
                 </div>
               </motion.div>
@@ -252,10 +246,10 @@ export function Hero() {
                 </div>
                 <div>
                   <div className="text-[10px] font-mono text-accent font-bold tracking-wider">
-                    CUSTOM SETTINGS
+                    PLAY STYLE
                   </div>
                   <div className="text-xs text-foreground font-heading font-medium">
-                    One-Tap Drag Ready
+                    Built around your grip
                   </div>
                 </div>
               </motion.div>

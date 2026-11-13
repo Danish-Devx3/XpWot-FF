@@ -3,11 +3,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck, AlertCircle } from "lucide-react";
 import { siteConfig } from "@/config/site";
+import { createPageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
-  title: "Terms and Conditions | XPWOT",
-  description: "Terms and conditions governing custom Free Fire sensitivity consulting and advisory services provided by XPWOT.",
-};
+export const metadata: Metadata = createPageMetadata(
+  "Terms and Conditions",
+  "Review the terms for XPWOT's custom Free Fire sensitivity configuration and advisory services.",
+  "/terms"
+);
 
 export default function TermsPage() {
   return (

@@ -98,10 +98,13 @@ export async function POST(req: NextRequest) {
       newOrder.payment_status = "FAILED";
       newOrder.updated_at = new Date().toISOString();
       await saveOrder(newOrder);
+      const insufficientBalance =
+        gatewayReason?.toLowerCase().includes("insufficient topup balance") ?? false;
       return NextResponse.json(
         {
-          error:
-            "ZapUPI rejected the payment request. Verify the live API key in your deployment settings and check the server logs for the gateway reason.",
+          error: insufficientBalance
+            ? "ZapUPI cannot create the payment because the merchant account has insufficient top-up balance. Add funds to your ZapUPI account or contact ZapUPI support, then try again."
+            : "ZapUPI rejected the payment request. Check the server logs for the gateway reason.",
         },
         { status: 502 }
       );

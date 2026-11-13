@@ -170,6 +170,8 @@ The app has no separate live/test toggle: it uses the `ZAPUPI_KEY` configured on
 the server. For live payments, replace the deployment's key with the live key from
 ZapUPI and redeploy; changing a dashboard mode alone does not update the deployed
 environment variable.
+If create-order returns `Insufficient Topup Balance`, the ZapUPI merchant account
+needs funds; changing the API key does not resolve that balance error.
 
 The checkout creates a unique order on the server and sends the customer to the
 ZapUPI payment URL in the same tab. Both the webhook and the success page use

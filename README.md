@@ -18,7 +18,7 @@
 - **Database & Idempotency (Prisma + MongoDB)**:
   - Database schema defined in `prisma/schema.prisma`.
   - Atomic status updates (`notification_status: { not: "SENT" }`) preventing duplicate Telegram alerts across webhook and status checks.
-  - Development fallback: Built-in persistent file cache when MongoDB is not configured or temporarily unreachable locally. Production requires a working MongoDB connection.
+  - Development fallback: Built-in persistent file cache when MongoDB is not configured or temporarily unreachable locally. Production requires a working MongoDB connection; serverless deployments do not write orders to the read-only app filesystem.
 - **Telegram Bot Notifications**: Automated, sanitized, instant order alert dispatched to your private Telegram channel/chat formatted with customer game UID, phone hardware, claw style, and IST timestamp.
 - **Anti-Fraud Success Protection**: `/success` page actively verifies payment status with the server before rendering the confirmed receipt; direct URL visits cannot bypass payment checks.
 - **Compliance & Legal Readiness**: Includes dedicated Terms & Conditions, Consumer Protection compliant Refund Policy, Contact desk, and third-party disclaimers (not affiliated with Garena/Free Fire).
@@ -186,6 +186,11 @@ https://your-domain.com/api/zapupi-webhook
 
 Replace `your-domain.com` with the exact production hostname set in
 `NEXT_PUBLIC_SITE_URL`. Use HTTPS and make sure the route is publicly reachable.
+Set `NEXT_PUBLIC_SITE_URL` in Vercel to the deployed HTTPS origin (not
+`localhost`) and redeploy after changing it. Check the endpoint in a browser:
+`https://your-domain.com/api/zapupi-webhook` should return
+`{"status":"ok","service":"zapupi-webhook"}`.
+
 ZapUPI sends a JSON `POST` when an order's status changes. The receiver accepts the
 documented fields (`order_id`, `status`, `txn_id`, `amount`, `pay_amount`, `utr`,
 `customer_mobile`, `remark`, `remark_array`, `create_at`, and `environment`) and
@@ -195,8 +200,11 @@ payment record or sending a paid-order Telegram alert. Invalid, unknown, and tes
 webhooks are acknowledged without marking an order paid.
 
 For production, use live ZapUPI credentials and a production `NEXT_PUBLIC_SITE_URL`.
-Test-environment events and transaction IDs starting with `DUMMY` are not accepted
-as paid in production.
+Test-environment events and transaction IDs starting with `DUMMY` are acknowledged
+but intentionally not accepted as paid in production. Their receipt appears in
+Vercel Function Logs as an ignored test webhook; they do not trigger Telegram
+delivery. For a real payment, the logs show webhook receipt followed by the
+server-side verification result.
 
 ---
 

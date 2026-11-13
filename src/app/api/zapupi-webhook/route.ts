@@ -4,6 +4,10 @@ import { verifyZapUPIPayment } from "@/lib/zapupi-payment";
 
 export const dynamic = "force-dynamic";
 
+export async function GET() {
+  return NextResponse.json({ status: "ok", service: "zapupi-webhook" });
+}
+
 export async function POST(req: NextRequest) {
   let payload: unknown;
 
@@ -20,6 +24,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "ok" });
   }
 
+  console.info("ZapUPI webhook received", {
+    orderId: parsed.data.order_id,
+    status: parsed.data.status,
+    environment: parsed.data.environment || "unspecified",
+  });
+
   if (
     process.env.NODE_ENV === "production" &&
     (parsed.data.environment?.toLowerCase() === "test" ||
@@ -33,6 +43,12 @@ export async function POST(req: NextRequest) {
     const confirmation = await verifyZapUPIPayment(parsed.data.order_id);
     if (!confirmation) {
       console.warn(`ZapUPI webhook received for unknown order: ${parsed.data.order_id}`);
+    } else {
+      console.info("ZapUPI webhook verification completed", {
+        orderId: parsed.data.order_id,
+        paid: confirmation.paid,
+        gatewayStatus: confirmation.gatewayStatus,
+      });
     }
   } catch (error) {
     console.error("ZapUPI webhook payment confirmation failed:", error);

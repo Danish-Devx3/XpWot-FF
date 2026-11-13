@@ -45,7 +45,9 @@ function persistLocalOrders() {
   }
 }
 
-ensureDataDir();
+if (process.env.NODE_ENV !== "production") {
+  ensureDataDir();
+}
 
 function toOrderRecord(doc: Document): OrderRecord {
   const createdAt = doc.created_at instanceof Date ? doc.created_at : new Date(doc.created_at);
@@ -74,6 +76,12 @@ function toOrderRecord(doc: Document): OrderRecord {
  */
 export async function saveOrder(order: OrderRecord): Promise<void> {
   const collection = await getOrdersCollection();
+  if (!collection && process.env.NODE_ENV === "production") {
+    throw new Error(
+      "Order database is unavailable in production. Configure DATABASE_URL or MONGODB_URI."
+    );
+  }
+
   if (collection) {
     const now = new Date(order.updated_at);
     await collection.updateOne(
@@ -102,7 +110,9 @@ export async function saveOrder(order: OrderRecord): Promise<void> {
   }
 
   localStore.set(order.zap_order_id, order);
-  persistLocalOrders();
+  if (!collection) {
+    persistLocalOrders();
+  }
 }
 
 /**

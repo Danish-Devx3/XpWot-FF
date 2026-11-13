@@ -89,16 +89,34 @@ export async function createZapUPIOrder(
   customerMobile?: string,
   remark?: string
 ): Promise<ZapUPICreateOrderResponse> {
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://xpwot.com").replace(/\/+$/, "");
+  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://xpwot.com";
+  let siteUrl: URL;
+  try {
+    siteUrl = new URL(configuredSiteUrl);
+  } catch {
+    throw new Error("NEXT_PUBLIC_SITE_URL must be a valid absolute URL");
+  }
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    (siteUrl.protocol !== "https:" ||
+      siteUrl.hostname === "localhost" ||
+      siteUrl.hostname === "127.0.0.1" ||
+      siteUrl.hostname === "::1")
+  ) {
+    throw new Error("NEXT_PUBLIC_SITE_URL must be a public HTTPS URL in production");
+  }
+
+  const siteOrigin = siteUrl.origin;
 
   const payload: ZapUPICreateOrderPayload = {
     zap_key: getZapKey(),
     order_id: orderId,
     amount: amountINR.toString(),
-    webhook_url: `${siteUrl}/api/zapupi-webhook`,
-    success_url: `${siteUrl}/success`,
-    failed_url: `${siteUrl}/order?payment=failed`,
-    timeout_url: `${siteUrl}/order?payment=timeout`,
+    webhook_url: `${siteOrigin}/api/zapupi-webhook`,
+    success_url: `${siteOrigin}/success`,
+    failed_url: `${siteOrigin}/order?payment=failed`,
+    timeout_url: `${siteOrigin}/order?payment=timeout`,
   };
 
   if (customerMobile) payload.customer_mobile = customerMobile;

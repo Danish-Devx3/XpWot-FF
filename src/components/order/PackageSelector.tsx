@@ -2,7 +2,7 @@
 
 import React from "react";
 import { UseFormSetValue, UseFormWatch } from "react-hook-form";
-import { Check, Sparkles, Zap } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { SENSI_PACKAGES, PACKAGE_IDS, PackageId } from "@/config/packages";
 import { OrderFormSchemaType } from "@/lib/validation";
 
@@ -36,29 +36,35 @@ export function PackageSelector({ setValue, watch }: PackageSelectorProps) {
           const isSelected = selectedPackageId === id;
 
           return (
-            <div
+            <button
+              type="button"
               key={id}
               onClick={() => setValue("packageId", id, { shouldValidate: true })}
-              className={`p-5 rounded-xl border cursor-pointer transition-all flex flex-col justify-between relative ${
+              aria-pressed={isSelected}
+              className={`w-full p-5 rounded-xl border text-left transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                 isSelected
                   ? "bg-accent/15 border-accent shadow-glow-orange ring-1 ring-accent"
-                  : "bg-background-elevated border-border hover:border-border/80"
+                  : "bg-background-elevated border-border hover:border-accent/60"
               }`}
             >
-              {pack.badge && (
-                <div className="absolute top-2.5 right-2.5">
-                  <span className="text-[10px] font-mono font-bold bg-accent text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-heading font-black text-lg text-foreground tracking-wide">
+                    {pack.name}
+                  </h3>
+                  {pack.badge && (
+                    <span className="text-[10px] font-mono font-bold bg-accent text-white px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                     <Sparkles className="w-2.5 h-2.5" />
                     {pack.badge}
-                  </span>
+                    </span>
+                  )}
                 </div>
-              )}
-
-              <div>
-                <h3 className="font-heading font-black text-lg text-foreground tracking-wide">
-                  {pack.name}
-                </h3>
-                <div className="flex items-baseline gap-2 mt-2 mb-3">
+                <p className="text-xs text-foreground-muted leading-relaxed mt-1">
+                  {pack.tagline}
+                </p>
+              </div>
+              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                <div className="flex items-baseline gap-2">
                   <span className="font-heading font-black text-2xl text-foreground">
                     ₹{pack.price}
                   </span>
@@ -66,16 +72,17 @@ export function PackageSelector({ setValue, watch }: PackageSelectorProps) {
                     ₹{pack.originalPrice}
                   </span>
                 </div>
-                <p className="text-xs text-foreground-muted leading-relaxed mb-4">
-                  {pack.tagline}
-                </p>
+                <span
+                  className={`w-6 h-6 rounded-full border flex items-center justify-center ${
+                    isSelected
+                      ? "bg-accent border-accent text-white"
+                      : "border-border text-transparent"
+                  }`}
+                >
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                </span>
               </div>
-
-              <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs font-mono">
-                <span className="text-foreground-muted">Delivery:</span>
-                <span className="text-accent font-semibold">{pack.deliveryEstimate}</span>
-              </div>
-            </div>
+            </button>
           );
         })}
       </div>

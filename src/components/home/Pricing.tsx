@@ -91,11 +91,6 @@ export function Pricing() {
 
                 {/* Delivery & CTA */}
                 <div className="space-y-4 pt-4 border-t border-border/60">
-                  <div className="flex items-center justify-between text-xs text-foreground-muted font-mono">
-                    <span>Est. Delivery:</span>
-                    <span className="text-accent font-semibold">{pack.deliveryEstimate}</span>
-                  </div>
-
                   <Link href={`/order?pack=${pack.id}`} className="block w-full">
                     <Button
                       variant={isFeatured ? "primary" : "secondary"}

@@ -81,11 +81,28 @@ export async function POST(req: NextRequest) {
         ["success", "true"].includes(zapOrder.status.toLowerCase()));
 
     if (!successfulResponse || !zapOrder.payment_url || !zapOrder.order_id) {
+      const gatewayReason = zapOrder.error || zapOrder.message;
+      const apiKey = process.env.ZAPUPI_KEY;
+      const safeGatewayReason = gatewayReason?.slice(0, 300);
+      console.warn("ZapUPI rejected create-order request", {
+        orderId,
+        status: zapOrder.status,
+        reason:
+          safeGatewayReason && apiKey
+            ? safeGatewayReason.split(apiKey).join("[redacted]")
+            : safeGatewayReason,
+        hasPaymentUrl: Boolean(zapOrder.payment_url),
+        hasGatewayOrderId: Boolean(zapOrder.order_id),
+      });
+
       newOrder.payment_status = "FAILED";
       newOrder.updated_at = new Date().toISOString();
       await saveOrder(newOrder);
       return NextResponse.json(
-        { error: "Failed to initiate ZapUPI payment. Please try again." },
+        {
+          error:
+            "ZapUPI rejected the payment request. Verify the live API key in your deployment settings and check the server logs for the gateway reason.",
+        },
         { status: 502 }
       );
     }

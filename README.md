@@ -166,6 +166,10 @@ Set `ZAPUPI_KEY` in `.env.local` and `NEXT_PUBLIC_SITE_URL` to the canonical HTT
 URL of your deployed site (no trailing slash). Each create-order request includes
 `https://<your-domain>/api/zapupi-webhook` as its per-order `webhook_url`, alongside
 the payment return URLs.
+The app has no separate live/test toggle: it uses the `ZAPUPI_KEY` configured on
+the server. For live payments, replace the deployment's key with the live key from
+ZapUPI and redeploy; changing a dashboard mode alone does not update the deployed
+environment variable.
 
 The checkout creates a unique order on the server and sends the customer to the
 ZapUPI payment URL in the same tab. Both the webhook and the success page use

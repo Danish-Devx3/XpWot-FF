@@ -1,9 +1,15 @@
 import { OrderRecord } from "@/types/order";
-import { getIndianTime } from "./utils";
-import { sanitizeText } from "./sanitize";
+import { getIndianTime, formatINR } from "./utils";
+import { escapeTelegramHtml } from "./sanitize";
+import { getPackageById } from "@/config/packages";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+function escapeTelegramValue(value: unknown, fallback = "Not specified"): string {
+  const text = typeof value === "string" ? value.replace(/[\r\n]+/g, " ").trim() : "";
+  return escapeTelegramHtml((text || fallback).slice(0, 500));
+}
 
 export async function sendTelegramOrderNotification(order: OrderRecord): Promise<boolean> {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
@@ -12,32 +18,35 @@ export async function sendTelegramOrderNotification(order: OrderRecord): Promise
   }
 
   const istTime = getIndianTime(new Date());
+  const packageDetails = getPackageById(order.package_id);
 
   const message = [
-    "🔥 NEW PAID ORDER RECEIVED 🔥",
+    "🔥 <b>NEW PAID ORDER</b>",
+    "━━━━━━━━━━━━━━━━━━",
     "",
-    `Order ID: ${sanitizeText(order.zap_order_id)}`,
-    `Payment ID: ${sanitizeText(order.zap_txn_id || "N/A")}`,
-    `Amount: ₹${order.amount}`,
-    `Pack: ${order.package_id.toUpperCase()} PACK`,
+    "🧾 <b>ORDER DETAILS</b>",
+    `<b>Order ID:</b> <code>${escapeTelegramValue(order.zap_order_id)}</code>`,
+    `<b>Payment ID:</b> <code>${escapeTelegramValue(order.zap_txn_id, "N/A")}</code>`,
+    `<b>Amount paid:</b> ${formatINR(order.amount)}`,
+    `<b>Package:</b> ${escapeTelegramValue(packageDetails?.name ?? order.package_id)}`,
     "",
-    "👤 PLAYER DETAILS:",
-    `Name: ${sanitizeText(order.customer_details.fullName)}`,
-    `Free Fire ID: ${sanitizeText(order.customer_details.gameId)}`,
-    `WhatsApp: ${sanitizeText(order.customer_details.whatsappNumber)}`,
-    `Telegram: ${order.customer_details.telegramUsername ? sanitizeText(order.customer_details.telegramUsername) : "None"}`,
+    "👤 <b>PLAYER DETAILS</b>",
+    `<b>Name:</b> ${escapeTelegramValue(order.customer_details.fullName)}`,
+    `<b>Free Fire ID:</b> <code>${escapeTelegramValue(order.customer_details.gameId)}</code>`,
+    `<b>WhatsApp:</b> ${escapeTelegramValue(order.customer_details.whatsappNumber)}`,
+    `<b>Telegram:</b> ${escapeTelegramValue(order.customer_details.telegramUsername, "None")}`,
     "",
-    "📱 DEVICE & SETTINGS:",
-    `Phone: ${sanitizeText(order.device_details.deviceModel)}`,
-    `RAM: ${order.device_details.ram}`,
-    `Chipset: ${order.device_details.chipset ? sanitizeText(order.device_details.chipset) : "Not specified"}`,
-    `Refresh Rate: ${order.device_details.refreshRate}`,
-    `DPI: ${order.device_details.deviceDpi ? sanitizeText(order.device_details.deviceDpi) : "Default"}`,
-    `Sensi Speed: ${order.device_details.sensiPreference}`,
-    `Play Style: ${order.device_details.playStyle}`,
-    `Finger Layout: ${order.device_details.fingerLayout}`,
+    "📱 <b>DEVICE &amp; SETTINGS</b>",
+    `<b>Phone:</b> ${escapeTelegramValue(order.device_details.deviceModel)}`,
+    `<b>RAM:</b> ${escapeTelegramValue(order.device_details.ram)}`,
+    `<b>Chipset:</b> ${escapeTelegramValue(order.device_details.chipset)}`,
+    `<b>Refresh rate:</b> ${escapeTelegramValue(order.device_details.refreshRate)}`,
+    `<b>DPI:</b> ${escapeTelegramValue(order.device_details.deviceDpi, "Default")}`,
+    `<b>Sensitivity:</b> ${escapeTelegramValue(order.device_details.sensiPreference)}`,
+    `<b>Play style:</b> ${escapeTelegramValue(order.device_details.playStyle)}`,
+    `<b>Finger layout:</b> ${escapeTelegramValue(order.device_details.fingerLayout)}`,
     "",
-    `⏰ Time: ${istTime} (IST)`,
+    `🕒 <b>Received:</b> ${escapeTelegramValue(istTime)} IST`,
   ].join("\n");
 
   try {
@@ -50,6 +59,7 @@ export async function sendTelegramOrderNotification(order: OrderRecord): Promise
       body: JSON.stringify({
         chat_id: TELEGRAM_CHAT_ID,
         text: message,
+        parse_mode: "HTML",
       }),
     });
 

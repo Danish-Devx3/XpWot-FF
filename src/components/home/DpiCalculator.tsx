@@ -21,6 +21,7 @@ import {
 const RAM_OPTIONS = ["2 GB", "3 GB", "4 GB", "6 GB", "8 GB", "12 GB", "16 GB", "Other"];
 const FINGER_OPTIONS = ["2 fingers", "3 fingers", "4 fingers", "5 fingers"] as const;
 const PLAY_STYLES = ["Rusher", "Sniper", "Balanced"] as const;
+const GAME_OPTIONS = ["Free Fire", "Free Fire MAX", "Free Fire India"] as const;
 const SENSITIVITY_NAMES = [
   ["general", "General", "Drag base"],
   ["redDot", "Red Dot", "Hipfire"],
@@ -35,6 +36,7 @@ type FormState = {
   ram: string;
   customRam: string;
   dpi: string;
+  game: (typeof GAME_OPTIONS)[number];
   fingerStyle: (typeof FINGER_OPTIONS)[number];
   playStyle: (typeof PLAY_STYLES)[number];
 };
@@ -44,6 +46,7 @@ const initialForm: FormState = {
   ram: "8 GB",
   customRam: "",
   dpi: "",
+  game: "Free Fire MAX",
   fingerStyle: "2 fingers",
   playStyle: "Balanced",
 };
@@ -60,7 +63,7 @@ function formatValue(value: unknown): string {
 function buildSettingsText(result: SensitivityResult): string {
   const { device, preferences, sensitivity } = result;
   return [
-    "XPWOT - Free Fire Sensitivity Profile",
+    `XPWOT - ${preferences.game} Sensitivity Profile`,
     `Device: ${device.name} (${device.brandName})`,
     `RAM: ${device.ram}`,
     `Game: ${preferences.game}`,
@@ -124,6 +127,7 @@ export function DpiCalculator() {
           deviceName,
           ram,
           dpi,
+          game: form.game,
           fingerStyle: form.fingerStyle,
           playStyle: form.playStyle,
         }),
@@ -168,7 +172,8 @@ export function DpiCalculator() {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${result.device.slug || "device"}-free-sensi.txt`;
+    const gameSlug = result.preferences.game.toLowerCase().replace(/\s+/g, "-");
+    anchor.download = `${result.device.slug || "device"}-${gameSlug}-sensi.txt`;
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
@@ -194,7 +199,7 @@ export function DpiCalculator() {
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="mb-9 text-center">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-background-card px-4 py-1.5 text-xs font-bold tracking-wider text-accent">
-            <Crosshair className="h-4 w-4" /> FREE SENSITIVITY FINDER
+            <Crosshair className="h-4 w-4" />Find your SENSI
           </div>
           <h2 className="font-heading text-3xl font-black uppercase tracking-tight text-white sm:text-4xl">
             Find Your Sensitivity
@@ -235,6 +240,28 @@ export function DpiCalculator() {
               </label>
             )}
 
+            <fieldset className="space-y-2 text-sm font-semibold text-foreground-muted sm:col-span-2">
+              <legend>Select Game for Your Sensi</legend>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {GAME_OPTIONS.map((game) => (
+                  <label key={game} className="cursor-pointer">
+                    <input
+                      type="radio"
+                      name="game"
+                      value={game}
+                      checked={form.game === game}
+                      onChange={() => updateForm("game", game)}
+                      required
+                      className="peer sr-only"
+                    />
+                    <span className="flex min-h-12 items-center justify-center rounded-input border border-border bg-background px-3 py-3 text-center text-sm font-semibold text-foreground transition peer-checked:border-accent peer-checked:bg-accent/15 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-accent">
+                      {game}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
             <label className="space-y-2 text-sm font-semibold text-foreground-muted">
               <span>Finger layout</span>
               <select value={form.fingerStyle} onChange={(event) => updateForm("fingerStyle", event.target.value as FormState["fingerStyle"])} className="w-full rounded-input border border-border bg-background px-4 py-3 text-foreground focus:border-accent focus:outline-none">
@@ -258,7 +285,7 @@ export function DpiCalculator() {
 
           {error && <div role="alert" className="flex items-start gap-2 rounded-xl border border-error/40 bg-error/10 p-3 text-sm text-red-300"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}</div>}
           <button type="submit" disabled={isLoading} className="inline-flex w-full items-center justify-center gap-2 rounded-btn bg-gradient-to-r from-accent to-accent-secondary px-6 py-3.5 font-heading font-bold text-white shadow-glow-orange transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60">
-            {isLoading ? <><Loader2 className="h-5 w-5 animate-spin" /> Generating profile...</> : <><Crosshair className="h-5 w-5" /> GET MY FREE SENSI</>}
+            {isLoading ? <><Loader2 className="h-5 w-5 animate-spin" /> Generating profile...</> : <><Crosshair className="h-5 w-5" /> GET MY NORMAL SENSI</>}
           </button>
         </form>
 
@@ -266,9 +293,9 @@ export function DpiCalculator() {
           <div id="sensi-result" className="mt-8 scroll-mt-24 space-y-5 rounded-card border border-border bg-background-card p-5 shadow-card-soft sm:p-8">
             <div className="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-xs font-bold tracking-widest text-accent">FREE SENSITIVITY PROFILE · {result.versionName}</p>
+                <p className="text-xs font-bold tracking-widest text-accent">NORMAL SENSI PROFILE · {result.versionName}</p>
                 <h3 className="mt-2 font-heading text-2xl font-black text-white">{result.device.name}</h3>
-                <p className="mt-1 text-sm text-foreground-muted">{result.device.brandName} · {result.device.ram} · {result.preferences.fingerStyle} · {result.preferences.playStyle} · {result.preferences.game}</p>
+                <p className="mt-1 text-sm text-foreground-muted">{result.device.brandName} · {result.device.ram} · Game: {result.preferences.game} · {result.preferences.fingerStyle} · {result.preferences.playStyle}</p>
               </div>
               <span className="inline-flex items-center gap-1.5 self-start rounded-full border border-yellow-500/30 bg-yellow-500/10 px-3 py-1.5 text-xs font-semibold text-yellow-300"><ShieldAlert className="h-4 w-4" /> Starting preset</span>
             </div>
@@ -310,7 +337,7 @@ export function DpiCalculator() {
 
             <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:flex-wrap">
               <button type="button" onClick={copySettings} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-btn border border-border px-4 py-2.5 text-sm font-semibold text-foreground transition hover:border-accent/50 hover:text-accent">{copyState.startsWith("Copied") ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} Copy Settings</button>
-              <button type="button" onClick={downloadSettings} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-btn border border-border px-4 py-2.5 text-sm font-semibold text-foreground transition hover:border-accent/50 hover:text-accent"><Download className="h-4 w-4" /> Download Free Sensi</button>
+              <button type="button" onClick={downloadSettings} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-btn border border-border px-4 py-2.5 text-sm font-semibold text-foreground transition hover:border-accent/50 hover:text-accent"><Download className="h-4 w-4" /> Download Sensi</button>
               <Link href={`/order?${premiumQuery}`} className="inline-flex min-h-11 items-center justify-center rounded-btn bg-accent px-4 py-2.5 text-center text-sm font-bold text-white transition hover:brightness-110">Try Premium Sensitivity for {result.device.name}</Link>
               {copyState && <p role="status" className="w-full text-sm text-foreground-muted">{copyState}</p>}
             </div>

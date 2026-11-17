@@ -10,6 +10,7 @@ export const sensitivityRequestSchema = z.object({
     .regex(/^\d+(?:\.\d+)?\s*(?:GB)?\+?$/i, "Enter RAM as a positive amount, such as 8 GB")
     .refine((value) => Number.parseFloat(value) > 0 && Number.parseFloat(value) <= 128),
   dpi: z.number().int().min(50).max(2000).nullable(),
+  game: z.enum(["Free Fire", "Free Fire MAX", "Free Fire India"]).default("Free Fire MAX"),
   fingerStyle: z.enum(["2 fingers", "3 fingers", "4 fingers", "5 fingers"]),
   playStyle: z.enum(["Rusher", "Sniper", "Balanced"]),
 });
@@ -135,7 +136,7 @@ export function calculateSensitivity(request: SensitivityRequest) {
       chipset: null,
     },
     preferences: {
-      game: "Free Fire MAX" as const,
+      game: request.game,
       fingerStyle: request.fingerStyle,
       playStyle: request.playStyle,
     },

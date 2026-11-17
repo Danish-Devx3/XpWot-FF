@@ -72,7 +72,7 @@ export function Hero() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-foreground-muted text-base sm:text-lg md:text-xl max-w-2xl mx-auto lg:mx-0 leading-relaxed font-sans"
             >
-              Start with a free sensitivity profile based on your phone and play style. No game login needed—just a clearer starting point for your setup.
+              Start with a Normal Sensi profile based on your phone and play style. No game login needed—just a clearer starting point for your setup.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -89,7 +89,7 @@ export function Hero() {
                   className="w-full font-heading text-base shadow-glow-orange-lg sm:w-auto"
                   rightIcon={<ArrowRight className="h-4 w-4" />}
                 >
-                  TRY THE FREE FINDER
+                  TRY NORMAL SENSI
                 </Button>
               </Link>
               <Link href="#packs" className="w-full sm:w-auto">
@@ -116,7 +116,7 @@ export function Hero() {
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Crosshair className="h-4 w-4 text-accent" />
-                Free starting profile
+                Normal Sensi profile
               </span>
             </motion.div>
           </div>

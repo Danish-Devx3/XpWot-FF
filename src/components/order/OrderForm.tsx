@@ -165,7 +165,7 @@ export function OrderForm({ initialPackId = "premium" }: OrderFormProps) {
           <div className="flex items-center justify-between text-sm">
             <span className="text-foreground-muted">Estimated Delivery:</span>
             <span className="font-mono text-accent font-semibold">
-              {currentPackage.deliveryEstimate}
+              INSTANT
             </span>
           </div>
           <div className="flex items-center justify-between text-sm">

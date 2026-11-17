@@ -9,7 +9,7 @@
 
 - **Esports Dark Aesthetics**: Futuristic gaming design with dark palette (`#08090B`, `#101216`, `#15181E`), neon orange accents (`#FF6B24`), ambient glow, Space Grotesk headings, and Inter body text.
 - **Hardware-Specific Sensitivity Profiling**: Customers select exact phone model, RAM size (2GB to 12GB+), screen refresh rate (60Hz–144Hz), device DPI, target speed, primary play style (Rusher, Sniper, Balanced), and claw finger layout (2, 3, 4, 5+ fingers).
-- **Free Sensitivity Finder**: The home page provides a responsive, server-validated profile finder and copy/download result card. Sensitivity values are clearly identified as configurable starting presets, not verified device-specific settings. Recommended DPI is returned only for the four supplied RAM mappings at a current DPI of 360; other combinations show an unavailable notice.
+- **Normal Sensi**: The home page provides a responsive, server-validated profile finder with a required game selection and copy/download result card. Sensitivity values are clearly identified as configurable starting presets, not verified device-specific settings. Recommended DPI is returned only for the four supplied RAM mappings at a current DPI of 360; other combinations show an unavailable notice.
 - **Single Premium Offer**: One Premium pack for all Android devices, customized to each customer's phone details, priced at ₹349 (reduced from ₹500).
 - **Production Payment Security**:
   - Authoritative server-side pricing from `src/config/packages.ts` (client values are never trusted).
